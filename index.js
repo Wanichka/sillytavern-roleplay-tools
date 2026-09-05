@@ -86,8 +86,15 @@ function start() {
             glyph.setAttribute('aria-hidden', 'true');
             element.append(glyph);
         } else element.textContent = label;
-        element.addEventListener('click', action);
+        if (action) element.addEventListener('click', action);
         return element;
+    };
+    // The chevron is drawn on the wrapper, so it follows the Tavern accent
+    // colour instead of the browser's default select arrow.
+    const wrapSelect = select => {
+        const wrap = make('span', 'rpt-select-wrap');
+        wrap.append(select);
+        return wrap;
     };
     function save() {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)); }
@@ -123,8 +130,8 @@ function start() {
     const settingsPanel = make('section', 'rpt-settings');
     settingsPanel.hidden = true;
     settingsPanel.setAttribute('aria-label', 'Страницы и размещение');
-    const resizeLeft = button('Размер окна (левый угол). Двойной щелчок — сброс', 'grip-lines', () => {}, 'rpt-resize rpt-resize-left');
-    const resizeRight = button('Размер окна (правый угол). Двойной щелчок — сброс', 'grip-lines', () => {}, 'rpt-resize rpt-resize-right');
+    const resizeLeft = button('Размер окна (левый угол). Двойной щелчок — сброс', 'grip-lines', null, 'rpt-resize rpt-resize-left');
+    const resizeRight = button('Размер окна (правый угол). Двойной щелчок — сброс', 'grip-lines', null, 'rpt-resize rpt-resize-right');
     shell.append(header, tabs, footer, workspace, settingsPanel, resizeLeft, resizeRight);
     const launcher = button('Roleplay Tools', 'layer-group', () => {
         layout.open = true;
@@ -356,7 +363,7 @@ function start() {
     }
     function makeBottomGrip(record) {
         const divider = make('div', 'rpt-divider rpt-bottom-divider');
-        const grip = button('Высота блока и окна. Двойной щелчок — автоматическая высота', 'grip-lines', () => {}, 'rpt-bottom-grip');
+        const grip = button('Высота блока и окна. Двойной щелчок — автоматическая высота', 'grip-lines', null, 'rpt-bottom-grip');
         divider.append(grip);
         let dragging = null;
         const resize = height => {
@@ -416,7 +423,7 @@ function start() {
         const divider = make('div', 'rpt-divider');
         const disabled = state(upper.id).collapsed || state(lower.id).collapsed;
         if (disabled) { divider.classList.add('rpt-divider-disabled'); return divider; }
-        const grip = button('Изменить высоту блоков. Стрелки вверх/вниз — на 5%', 'grip-lines', () => {}, 'rpt-divider-grip');
+        const grip = button('Изменить высоту блоков. Стрелки вверх/вниз — на 5%', 'grip-lines', null, 'rpt-divider-grip');
         divider.append(grip);
         const setRatio = ratio => {
             const total = state(upper.id).weight + state(lower.id).weight;
@@ -487,7 +494,7 @@ function start() {
             for (const record of modules.values()) enabled ? mount(record) : release(record);
             renderPages(); save();
         });
-        toggle('Context закреплён под вкладками', layout.pinContext, value => {
+        toggle('Context виден на всех страницах', layout.pinContext, value => {
             layout.pinContext = value; expanded = null; renderPages(); renderSettings(); save();
         });
         const positionLabel = make('label', 'rpt-field', 'Положение окна');
@@ -497,7 +504,7 @@ function start() {
         }
         position.value = layout.side;
         position.addEventListener('change', () => { layout.side = position.value; fitWindow(); save(); });
-        positionLabel.append(position); settingsPanel.append(positionLabel);
+        positionLabel.append(wrapSelect(position)); settingsPanel.append(positionLabel);
         settingsPanel.append(button('Стандартный размер окна', null, resetSize, 'rpt-action'));
         const pagesTitle = make('div', 'rpt-settings-heading');
         pagesTitle.append(make('span', 'rpt-label', 'Страницы'), button('Добавить страницу', 'plus', () => {
@@ -533,8 +540,10 @@ function start() {
         if (!modules.size) settingsPanel.append(make('p', 'rpt-hint', 'Установи версии расширений Wani с поддержкой Roleplay Tools.'));
         for (const record of modules.values()) {
             const box = make('div', 'rpt-module-editor');
+            box.append(make('div', 'rpt-module-title', record.descriptor.title || record.id));
             const row = make('div', 'rpt-editor-row');
-            const label = make('label', 'rpt-field', record.descriptor.title || record.id);
+            const label = make('label', 'rpt-field rpt-field-inline');
+            label.append(make('span', 'rpt-field-caption', 'Страница'));
             const select = make('select');
             for (const page of layout.pages) {
                 const option = make('option', '', page.name); option.value = page.id; select.append(option);
@@ -543,7 +552,7 @@ function start() {
             select.disabled = isPinned(record);
             select.setAttribute('aria-label', `Страница: ${record.descriptor.title}`);
             select.addEventListener('change', () => { state(record.id).page = select.value; expanded = null; renderPages(); renderSettings(); save(); });
-            label.append(select); row.append(label);
+            label.append(wrapSelect(select)); row.append(label);
             const peers = [...modules.values()].filter(item => !isPinned(item) && state(item.id).page === state(record.id).page)
                 .sort((a, b) => state(a.id).order - state(b.id).order);
             const index = peers.indexOf(record);
