@@ -542,8 +542,6 @@ function start() {
             const box = make('div', 'rpt-module-editor');
             box.append(make('div', 'rpt-module-title', record.descriptor.title || record.id));
             const row = make('div', 'rpt-editor-row');
-            const label = make('label', 'rpt-field rpt-field-inline');
-            label.append(make('span', 'rpt-field-caption', 'Страница'));
             const select = make('select');
             for (const page of layout.pages) {
                 const option = make('option', '', page.name); option.value = page.id; select.append(option);
@@ -552,7 +550,7 @@ function start() {
             select.disabled = isPinned(record);
             select.setAttribute('aria-label', `Страница: ${record.descriptor.title}`);
             select.addEventListener('change', () => { state(record.id).page = select.value; expanded = null; renderPages(); renderSettings(); save(); });
-            label.append(wrapSelect(select)); row.append(label);
+            row.append(wrapSelect(select));
             const peers = [...modules.values()].filter(item => !isPinned(item) && state(item.id).page === state(record.id).page)
                 .sort((a, b) => state(a.id).order - state(b.id).order);
             const index = peers.indexOf(record);
@@ -653,7 +651,6 @@ function start() {
 
     const api = Object.freeze({
         version: 1, register, open: openModule,
-        isDocked: id => modules.get(id)?.mounted === true,
         unregister(id) {
             const record = modules.get(id);
             if (!record) return;
