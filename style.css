@@ -1,0 +1,196 @@
+/* Same palette recipe as Wani's Character Visual / Story Notes / Story Goals.
+   Only the host and explicitly registered docked panels are affected. */
+#rpt-shell, #rpt-launcher {
+    --rpt-bg: var(--SmartThemeBlurTintColor, rgba(22,23,25,.96));
+    --rpt-text: var(--SmartThemeBodyColor, #eeeae3);
+    --rpt-accent: var(--SmartThemeQuoteColor, #c58a5c);
+    --rpt-border: color-mix(in srgb, var(--rpt-accent) 42%, transparent);
+    --rpt-soft: color-mix(in srgb, var(--rpt-text) 19%, transparent);
+    --rpt-layer-1: color-mix(in srgb, var(--rpt-bg), var(--rpt-text) 6%);
+    --rpt-layer-2: color-mix(in srgb, var(--rpt-bg), var(--rpt-text) 12%);
+    --rpt-muted: color-mix(in srgb, var(--rpt-text) 68%, transparent);
+    color: var(--rpt-text);
+    font-family: var(--mainFontFamily, system-ui, sans-serif);
+    box-sizing: border-box;
+}
+#rpt-shell {
+    position: fixed;
+    z-index: 10020;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--rpt-border);
+    border-radius: 15px;
+    background: radial-gradient(circle at 9% 7%, color-mix(in srgb, var(--rpt-accent) 8%, transparent), transparent 25%), var(--rpt-bg);
+    box-shadow: 0 18px 60px rgba(0,0,0,.45);
+    backdrop-filter: blur(calc(var(--SmartThemeBlurStrength, 10) * 1px));
+    isolation: isolate;
+}
+#rpt-shell::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 1px solid color-mix(in srgb, var(--rpt-accent) 15%, transparent);
+    border-radius: 11px;
+    pointer-events: none;
+    z-index: 3;
+}
+#rpt-shell *, #rpt-shell *::before, #rpt-shell *::after { box-sizing: border-box; }
+#rpt-shell[hidden], #rpt-launcher[hidden], #rpt-shell [hidden] { display: none !important; }
+#rpt-shell .rpt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px 8px 14px;
+    min-height: 48px;
+    flex: 0 0 auto;
+    background: var(--rpt-layer-1);
+    border-bottom: 1px solid var(--rpt-border);
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+}
+#rpt-shell .rpt-brand {
+    color: var(--rpt-accent);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 17px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#rpt-shell .rpt-header-actions, #rpt-shell .rpt-module-controls { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+#rpt-shell button.rpt-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 29px;
+    min-width: 29px;
+    height: 29px;
+    padding: 0;
+    border: 1px solid var(--rpt-soft);
+    border-radius: 8px;
+    background: var(--rpt-layer-2);
+    color: var(--rpt-text);
+    font-size: 12px;
+    cursor: pointer;
+}
+#rpt-shell .rpt-action, #rpt-shell .rpt-tab {
+    color: var(--rpt-text);
+    background: var(--rpt-layer-2);
+    border: 1px solid var(--rpt-soft);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 12px;
+    padding: 7px 10px;
+    cursor: pointer;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+#rpt-shell .rpt-action:hover, #rpt-shell button.rpt-icon:hover { color: var(--rpt-accent); border-color: var(--rpt-border); }
+#rpt-shell button:disabled { opacity: .4; cursor: default; }
+#rpt-shell button:focus-visible, #rpt-shell input:focus-visible, #rpt-shell select:focus-visible {
+    outline: 2px solid var(--rpt-accent); outline-offset: -2px;
+}
+#rpt-shell .rpt-tabs {
+    display: flex;
+    gap: 5px;
+    padding: 7px 9px;
+    overflow-x: auto;
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--rpt-soft);
+    scrollbar-width: thin;
+}
+#rpt-shell .rpt-tab { background: transparent; border-color: transparent; color: var(--rpt-muted); flex: 1 0 auto; max-width: 230px; }
+#rpt-shell .rpt-tab[aria-selected='true'] {
+    color: var(--rpt-accent);
+    border-color: var(--rpt-border);
+    background: color-mix(in srgb, var(--rpt-layer-2), var(--rpt-accent) 8%);
+}
+#rpt-shell .rpt-workspace { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+#rpt-shell .rpt-page {
+    height: 100%;
+    display: grid;
+    padding: 8px 9px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rpt-border) transparent;
+    align-content: stretch;
+}
+#rpt-shell .rpt-tile { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--rpt-soft); border-radius: 11px; }
+#rpt-shell .rpt-footer { flex: 0 0 auto; border-top: 1px solid var(--rpt-border); padding: 4px 9px 17px; }
+#rpt-shell .rpt-pinned { border: 0; border-radius: 0; }
+#rpt-shell .rpt-module-root { height: 100%; width: 100%; }
+#rpt-shell .rpt-divider { display: flex; justify-content: center; align-items: center; min-height: 12px; }
+#rpt-shell .rpt-divider-grip {
+    display: block;
+    width: 100%;
+    padding: 0;
+    height: 12px;
+    font-size: 11px;
+    line-height: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--rpt-soft);
+    cursor: row-resize;
+    touch-action: none;
+}
+#rpt-shell .rpt-divider-grip:hover { color: var(--rpt-accent); }
+#rpt-shell .rpt-resize {
+    position: absolute;
+    bottom: 0;
+    z-index: 5;
+    width: 34px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    background: var(--rpt-layer-1);
+    color: var(--rpt-muted);
+    font-size: 11px;
+    touch-action: none;
+}
+#rpt-shell .rpt-resize-left { left: 3px; cursor: nesw-resize; border-radius: 0 6px 0 9px; }
+#rpt-shell .rpt-resize-right { right: 3px; cursor: nwse-resize; border-radius: 6px 0 9px 0; }
+#rpt-shell[data-side='left'] .rpt-resize-left, #rpt-shell[data-side='right'] .rpt-resize-right,
+#rpt-shell.rpt-mobile .rpt-resize { display: none; }
+#rpt-shell .rpt-workspace { margin-bottom: 16px; }
+#rpt-shell:has(.rpt-footer:not([hidden])) .rpt-workspace { margin-bottom: 0; }
+#rpt-shell .rpt-settings { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 12px 12px 25px; }
+#rpt-shell .rpt-settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; }
+#rpt-shell .rpt-settings-heading:not(:first-child) { margin-top: 18px; }
+#rpt-shell .rpt-label { font-size: 13px; color: var(--rpt-accent); margin: 14px 0 8px; }
+#rpt-shell .rpt-check { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; font-size: 12px; cursor: pointer; }
+#rpt-shell .rpt-check input { flex: 0 0 auto; accent-color: var(--rpt-accent); margin-top: 3px; }
+#rpt-shell .rpt-field { display: flex; flex-direction: column; gap: 5px; font-size: 12px; min-width: 0; flex: 1; margin: 0 0 10px; }
+#rpt-shell .rpt-page-editor { display: flex; align-items: center; gap: 5px; margin-bottom: 7px; }
+#rpt-shell .rpt-page-editor input { flex: 1; min-width: 0; }
+#rpt-shell .rpt-settings input[type='text'], #rpt-shell .rpt-settings select {
+    width: 100%; min-width: 0; padding: 7px; font: inherit; color: var(--rpt-text);
+    background: var(--rpt-bg); border: 1px solid var(--rpt-soft); border-radius: 8px;
+}
+#rpt-shell .rpt-module-editor { border-top: 1px solid var(--rpt-soft); padding: 10px 0 0; }
+#rpt-shell .rpt-editor-row { display: flex; align-items: center; gap: 8px; }
+#rpt-shell .rpt-hint, #rpt-shell .rpt-empty { color: var(--rpt-muted); font-size: 12px; line-height: 1.5; }
+#rpt-shell .rpt-empty { padding: 10px; }
+#rpt-launcher {
+    position: fixed;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10020;
+    padding: 9px 14px;
+    border: 1px solid var(--rpt-border);
+    border-radius: 999px;
+    color: var(--rpt-text);
+    background: var(--rpt-layer-1);
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0,0,0,.3);
+}
+#rpt-launcher i { color: var(--rpt-accent); }
+@media (pointer: coarse) {
+    #rpt-shell button.rpt-icon { width: 36px; min-width: 36px; height: 36px; }
+    #rpt-shell .rpt-tab, #rpt-shell .rpt-action { min-height: 42px; }
+    #rpt-shell .rpt-resize { height: 24px; width: 44px; }
+    #rpt-shell .rpt-settings input, #rpt-shell .rpt-settings select { font-size: 16px; }
+}

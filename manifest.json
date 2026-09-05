@@ -1,0 +1,12 @@
+{
+    "display_name": "Roleplay Tools",
+    "loading_order": 5,
+    "requires": [],
+    "optional": [],
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Wani",
+    "version": "0.1.0-beta.1",
+    "homePage": "https://github.com/Wanichka/sillytavern-roleplay-tools",
+    "auto_update": false
+}
