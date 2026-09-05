@@ -167,6 +167,33 @@
     width: 100%; min-width: 0; padding: 7px; font: inherit; color: var(--rpt-text);
     background: var(--rpt-bg); border: 1px solid var(--rpt-soft); border-radius: 8px;
 }
+/* Tavern themes hide the native select arrow, which made the page picker read
+   as a caption. The chevron lives on the wrapper so it can use the accent. */
+#rpt-shell .rpt-settings select { appearance: none; -webkit-appearance: none; padding-right: 28px; }
+#rpt-shell .rpt-select-wrap { position: relative; display: block; min-width: 0; }
+#rpt-shell .rpt-select-wrap::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid var(--rpt-accent);
+    border-bottom: 1.5px solid var(--rpt-accent);
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+}
+#rpt-shell .rpt-select-wrap:has(select:disabled)::after { opacity: .4; }
+#rpt-shell .rpt-module-title { font-size: 12px; margin-bottom: 7px; overflow-wrap: anywhere; }
+#rpt-shell .rpt-field-inline { flex-direction: row; align-items: center; gap: 8px; margin: 0; }
+#rpt-shell .rpt-field-caption {
+    flex: 0 0 auto;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--rpt-muted);
+}
+#rpt-shell .rpt-field-inline .rpt-select-wrap { flex: 1 1 auto; }
 #rpt-shell .rpt-module-editor { border-top: 1px solid var(--rpt-soft); padding: 10px 0 0; }
 #rpt-shell .rpt-editor-row { display: flex; align-items: center; gap: 8px; }
 #rpt-shell .rpt-hint, #rpt-shell .rpt-empty { color: var(--rpt-muted); font-size: 12px; line-height: 1.5; }
