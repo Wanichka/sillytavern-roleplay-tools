@@ -1,27 +1,40 @@
-# Roleplay Tools · beta 0.1.0
+# Roleplay Tools · 0.1.0-beta.2
 
 Общая панель для расширений Wani в SillyTavern. Страницы можно настраивать: несколько расширений одновременно на одной странице, разные наборы на других. Расширения остаются самостоятельными и продолжают обрабатывать сообщения своим кодом.
 
-Первая версия подключает **Character Thoughts**, **Relationship Memory Tracker** и **Context Tracker**. На странице **Live** сразу видны Thoughts и Relations; Context закреплён внизу. Character Visual, Story Notes и Story Goals пока остаются отдельными окнами: их адаптеры планируются следующим этапом.
+Подключены **Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** и **Story Goals**. На странице **Live** сразу видны Thoughts и Relations; Context закреплён внизу. При первом подключении Visual создаётся страница **Персонаж**, а для Notes и Goals — общая страница **Сюжет**. Состав страниц и порядок блоков можно менять.
+
+## Обновление с beta.1
+
+1. Обнови Roleplay Tools обычной кнопкой обновления в Tavern, оставаясь на ветке `roleplay-tools-integration`. Версия оболочки должна стать `0.1.0-beta.2`.
+2. У Character Visual, Story Notes и Story Goals выбери **Switch branch / Сменить ветку → origin/roleplay-tools-integration**. Уже установленным Thoughts, Relations и Context менять ветки не требуется.
+3. Полностью обнови страницу Tavern.
+
+Раскладка существующих блоков сохраняется. Для новых блоков страницы создаются один раз; удалённые пользователем страницы не восстанавливаются при перезагрузке. Если новые адаптеры успели загрузиться в старую beta.1, они могут оказаться на Live: перенеси их через настройки страниц.
+
+В этой версии также исправлено сворачивание единственного блока страницы: остаётся только заголовок. Переключение страниц сохраняет незаконченный текст в редакторах Notes и Goals. Кнопка превью Visual показывает или скрывает изображение, сохраняя размер общей панели и прежние размеры отдельного окна.
 
 ## Установка через GitHub
 
-Ветка первой тестовой версии во всех четырёх репозиториях:
+Тестовая ветка во всех семи репозиториях:
 
 ```text
 roleplay-tools-integration
 ```
 
 1. В SillyTavern открой **Расширения → Установить расширение**. Вставь URL `https://github.com/Wanichka/sillytavern-roleplay-tools`. В поле **Branch or tag name / Ветка или тег** укажи `roleplay-tools-integration`. Установи.
-2. В управлении расширениями у каждого из трёх уже установленных трекеров нажми **Switch branch / Сменить ветку** (значок ветвления). Выбери `origin/roleplay-tools-integration` или `roleplay-tools-integration`, если локальная ветка уже есть. Повторно устанавливать трекеры не нужно.
+2. В управлении расширениями у каждого из шести уже установленных расширений нажми **Switch branch / Сменить ветку** (значок ветвления). Выбери `origin/roleplay-tools-integration` или `roleplay-tools-integration`, если локальная ветка уже есть. Повторно устанавливать расширения не нужно; можно подключить только те, которыми пользуешься.
 3. Полностью обнови страницу Tavern. Если она предлагает перезагрузку после каждого переключения, это нормально: ещё не переключённые расширения пока будут отдельными окнами.
 
 | Расширение | Репозиторий | Версия в тестовой ветке |
 | --- | --- | --- |
-| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.1 |
+| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.2 |
 | Character Thoughts | [sillytavern-character-thoughts](https://github.com/Wanichka/sillytavern-character-thoughts/tree/roleplay-tools-integration) | 1.2.1-beta.1 |
 | Relationship Memory Tracker | [sillytavern-relationship-memory-tracker](https://github.com/Wanichka/sillytavern-relationship-memory-tracker/tree/roleplay-tools-integration) | 2.4.1-beta.1 |
 | Context Tracker | [sillytavern-context-tracker](https://github.com/Wanichka/sillytavern-context-tracker/tree/roleplay-tools-integration) | 1.0.1-beta.1 |
+| Character Visual | [sillytavern-character-visual](https://github.com/Wanichka/sillytavern-character-visual/tree/roleplay-tools-integration) | 1.0.1-beta.1 |
+| Story Notes | [sillytavern-story-notes](https://github.com/Wanichka/sillytavern-story-notes/tree/roleplay-tools-integration) | 0.1.1-beta.1 |
+| Story Goals | [sillytavern-story-goals](https://github.com/Wanichka/sillytavern-story-goals/tree/roleplay-tools-integration) | 0.1.1-beta.1 |
 
 Инструкция сверена с интерфейсом установки и переключения веток SillyTavern 1.18.0. В старой версии без выбора веток потребуется обновление Tavern. Для установки используй обычный URL репозитория, а не ссылку `/tree/...` из таблицы.
 
@@ -51,21 +64,21 @@ Roleplay Tools сохраняет **только раскладку** в `localS
 Чтобы закончить тестирование до выхода стабильной версии:
 
 1. Отключи Roleplay Tools в менеджере расширений Tavern.
-2. Переключи Thoughts, Relations и Context обратно на `main` / `origin/main`.
+2. Переключи подключённые расширения обратно на `main` / `origin/main`.
 3. Обнови страницу.
 
-Удалять папки расширений или данные браузера не требуется. После выхода стабильной версии можно будет переключить все четыре расширения на `main` и обновить. Тестовые ветки на GitHub этому не мешают; удалять их имеет смысл только после переключения установленных копий.
+Удалять папки расширений или данные браузера не требуется. После выхода стабильной версии можно будет переключить все семь расширений на `main` и обновить. Тестовые ветки на GitHub этому не мешают; удалять их имеет смысл только после переключения установленных копий.
 
 ## Проверка beta
 
-Браузерный тест загружает реальные файлы трёх трекеров. Он проверяет разбор тестового сообщения, изменение размера окна и пропорций, сворачивание и разворачивание блоков, перенос между страницами, закрепление Context, сохранение раскладки, отключение/включение оболочки, обновление скрытой страницы, порядок загрузки и отсутствие оболочки. При операциях с раскладкой сравниваются данные, настройки, число обработчиков событий и вызовов промпта.
+Браузерный тест загружает реальные файлы шести расширений. Он проверяет разбор тестового сообщения, изменение размера окна и пропорций, сворачивание и разворачивание блоков, перенос между страницами, закрепление Context, сохранение раскладки, отключение/включение оболочки, обновление скрытой страницы, порядок загрузки и отсутствие оболочки. Дополнительно проверяются черновики и сохранение заметок/целей, выполнение шагов, поля Visual, его макрос и сохранение в настоящем IndexedDB через localforage. При операциях с раскладкой сравниваются данные, настройки, число обработчиков событий и вызовов промпта.
 
 В этом стенде заменены API контекста и сервер Tavern. Проверка в настоящей Tavern с пользовательской темой, всеми установленными расширениями и реальной генерацией остаётся необходимой. Короткий сценарий: открыть чат → получить ответ → переключить страницу → изменить размер → перезагрузить страницу → отключить сборку в общую панель.
 
-Для повторения автоматической проверки нужен Node.js 22+ и Playwright. Расположи тестовые версии репозиториев в соседних каталогах с именами `character-thoughts`, `relationship-memory-tracker`, `context-tracker`. При другом расположении родительский каталог задаётся через `RPT_EXTENSIONS_DIR`.
+Для повторения автоматической проверки нужен Node.js 22+, Playwright и localforage. Расположи тестовые версии репозиториев в соседних каталогах с именами `character-thoughts`, `relationship-memory-tracker`, `context-tracker`, `character-visual`, `story-notes`, `story-goals`. При другом расположении родительский каталог задаётся через `RPT_EXTENSIONS_DIR`.
 
 ```sh
-npm install --no-save playwright
+npm install --no-save playwright localforage
 npx playwright install chromium
 node tests/browser.mjs
 ```
@@ -78,6 +91,7 @@ API публикуется как `window.WaniRoleplayTools` версии 1. С�
 window.WaniRoleplayTools?.register({
     id: 'example',
     title: 'Example',
+    defaultPage: { id: 'example-page', name: 'Пример' }, // только первое подключение
     element: existingPanel,
     launcher: existingButton,
     controls: existingHeader,

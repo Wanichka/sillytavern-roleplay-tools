@@ -1,4 +1,4 @@
-// Browser integration test: loads the actual three extensions, with only ST's
+// Browser integration test: loads the actual six extensions, with only ST's
 // backend/context replaced. Run instructions and limits are in README.md.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
@@ -17,6 +17,9 @@ const source = {
     thoughts: path.join(siblings, 'character-thoughts'),
     relations: path.join(siblings, 'relationship-memory-tracker'),
     context: path.join(siblings, 'context-tracker'),
+    visual: path.join(siblings, 'character-visual'),
+    notes: path.join(siblings, 'story-notes'),
+    goals: path.join(siblings, 'story-goals'),
 };
 const base = '/scripts/extensions/third-party/';
 const stub = `
@@ -38,10 +41,17 @@ export const extension_prompt_types = {IN_CHAT:1};
 export const extension_prompt_roles = {SYSTEM:0};
 window.context = {
  chatId:'test-chat',getCurrentChatId(){return this.chatId},chatMetadata:{},
- extensionSettings:{},chat:[],name2:'Test card',characters:[],maxContext:32000,
- saveMetadata(){},saveMetadataDebounced(){},saveSettingsDebounced(){},
- getTokenCountAsync:async text=>Math.ceil(text.length/4),eventTypes:event_types,eventSource
+ extensionSettings:JSON.parse(sessionStorage.getItem('qa-settings')||'{}'),chat:[],name2:'Test card',characters:[],maxContext:32000,
+ saveMetadata(){},saveMetadataDebounced(){},saveSettingsDebounced(){sessionStorage.setItem('qa-settings',JSON.stringify(this.extensionSettings))},
+ getTokenCountAsync:async text=>Math.ceil(text.length/4),eventTypes:event_types,event_types,eventSource,
+ registerMacro(name,fn){window.macros[name]=fn},unregisterMacro(name){delete window.macros[name]},
+ libs:{localforage:window.localforage}
 };
+window.macros={};
+// Their original default launchers share a position. Seed distinct saved user
+// positions, as in an existing Tavern setup, so fallback is pointer-testable.
+if(!localStorage.getItem('story_notes_button_pos'))localStorage.setItem('story_notes_button_pos',JSON.stringify({left:20,top:100}));
+if(!localStorage.getItem('story_goals_button_pos'))localStorage.setItem('story_goals_button_pos',JSON.stringify({left:20,top:170}));
 window.SillyTavern = {getContext:()=>window.context};
 window.jQuery = fn=>Promise.resolve().then(fn);
 window.toastr = {warning:console.warn,success(){},error:console.error,info(){}};
@@ -50,17 +60,18 @@ const html = order => `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>:root {--SmartThemeBlurTintColor:#0b1720;--SmartThemeBodyColor:#d2d7dc;--SmartThemeQuoteColor:#b7997c;--SmartThemeBlurStrength:10;--mainFontFamily:Arial}
 body{margin:0;background:#202d38;color:var(--SmartThemeBodyColor);font-family:Arial}*{box-sizing:border-box}
-#extensions_settings{display:none}button,input,select{font:inherit}button{cursor:pointer}
+#extensions_settings,#extensions_settings2,#extensionsMenu{display:none}button,input,select{font:inherit}button{cursor:pointer}
 .qa-chat{margin:60px auto;padding:28px;width:45%;background:#0b1720;border-radius:12px;line-height:1.7}
 </style>
 ${Object.keys(source).map(id=>`<link rel="stylesheet" href="${base}${id}/style.css">`).join('')}
 </head><body><div class="qa-chat"><h2>Тестовый разговор</h2><p>Панели используют настоящие стили расширений. Данные и события Tavern заменены тестовым контекстом.</p></div>
-<div id="extensions_settings"></div><div id="chat"></div>
+<div id="extensions_settings"></div><div id="extensions_settings2"></div><div id="extensionsMenu"></div><div id="chat"></div>
+${order.startsWith('six') ? '<script src="/localforage.js"></script>' : ''}
 <script type="module">
 await import('/script.js');
-${order === 'first' ? `await import('${base}host/index.js');` : ''}
-await Promise.all(['thoughts','relations','context'].map(id=>import('${base}'+id+'/index.js')));
-${order === 'last' ? `setTimeout(()=>import('${base}host/index.js'),1300);` : ''}
+${['first','six'].includes(order) ? `await import('${base}host/index.js');` : ''}
+await Promise.all(${JSON.stringify(order.startsWith('six')?['thoughts','relations','context','visual','notes','goals']:['thoughts','relations','context'])}.map(id=>import('${base}'+id+'/index.js')));
+${['last','six-last'].includes(order) ? `setTimeout(()=>import('${base}host/index.js'),1600);` : ''}
 </script></body></html>`;
 const server = createServer(async (req, res) => {
     try {
@@ -68,8 +79,12 @@ const server = createServer(async (req, res) => {
         let content, type;
         if (url.pathname === '/') { content = html(url.searchParams.get('order') || 'first'); type = 'text/html'; }
         else if (url.pathname === '/script.js') { content = stub; type = 'text/javascript'; }
+        else if (url.pathname === '/localforage.js') {
+            content=await readFile(process.env.RPT_LOCALFORAGE_PATH || require.resolve('localforage/dist/localforage.js'));
+            type='text/javascript';
+        }
         else {
-            const match = url.pathname.match(/^\/scripts\/extensions\/third-party\/(host|thoughts|relations|context)\/(index\.js|style\.css|roleplay-tools-adapter\.js)$/);
+            const match = url.pathname.match(/^\/scripts\/extensions\/third-party\/(host|thoughts|relations|context|visual|notes|goals)\/(index\.js|style\.css|roleplay-tools-adapter\.js|constants\.js|storage\.js)$/);
             if (!match) { res.writeHead(404); res.end(); return; }
             content = await readFile(path.join(source[match[1]], match[2]));
             type = match[2].endsWith('.css') ? 'text/css' : 'text/javascript';
@@ -192,6 +207,151 @@ try {
     });
     check(await touch.locator('#rpt-shell').evaluate(el=>getComputedStyle(el).color==='rgb(41, 36, 31)'),'host follows a light Tavern theme');
     await touch.close();
+    const six=await browser.newPage({viewport:{width:1440,height:1000}});
+    six.on('pageerror',error=>errors.push(error.message));
+    six.on('dialog',dialog=>dialog.accept());
+    await six.goto(`${url}/?order=six`);
+    await six.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+    await six.waitForFunction(()=>Object.keys(macros).length===2);
+    check(await six.getByRole('tab').count()===3,'six panels get Live, character and story pages');
+    await six.getByRole('tab',{name:'Сюжет',exact:true}).click();
+    check(await six.locator('#sn-panel').isVisible() && await six.locator('#sg-panel').isVisible(),'notes and goals share a page');
+    check(await six.locator('.sn-empty').count()===1 && await six.locator('.sg-empty').count()===1,'new panels render on first mount');
+    await six.locator('#sn-add').click();
+    await six.locator('.sn-editor-input').fill('Черновик: встретиться у маяка.');
+    await six.getByRole('tab',{name:'Live',exact:true}).click();
+    await six.getByRole('tab',{name:'Сюжет',exact:true}).click();
+    check(await six.locator('.sn-editor-input').inputValue()==='Черновик: встретиться у маяка.','page switch preserves unsaved note');
+    await six.locator('[data-sn-save]').click();
+    check((await six.locator('.sn-card-text').textContent()).includes('маяка'),'hosted note save works');
+    await six.locator('[data-sn-toggle]').click();
+    check(await six.locator('.sn-card.sn-off').count()===1,'hosted note injection toggle works');
+    await six.locator('#sg-add').click();
+    await six.locator('.sg-editor-input').fill('Найти путь к маяку');
+    await six.getByRole('tab',{name:'Персонаж',exact:true}).click();
+    await six.getByRole('tab',{name:'Сюжет',exact:true}).click();
+    check(await six.locator('.sg-editor-input').inputValue()==='Найти путь к маяку','page switch preserves unsaved goal');
+    await six.locator('[data-sg-save]').click();
+    await six.locator('[data-sg-add-step]').click();
+    await six.locator('.sg-editor-input').fill('Найти карту');
+    await six.locator('[data-sg-save]').click();
+    await six.locator('[data-sg-step-check]').click();
+    check(await six.locator('.sg-step.sg-done').count()===1,'goal steps save and complete in host');
+    await six.locator('[data-sg-check]').click();
+    check(await six.locator('.sg-card.sg-done').count()===1,'hosted goal completion works');
+    const noteDownload=six.waitForEvent('download');
+    await six.locator('#sn-export').click();
+    const exportedNote=await noteDownload;
+    check((await readFile(await exportedNote.path(),'utf8')).includes('маяка'),'hosted note export works');
+    await six.locator('#sn-import-file').setInputFiles(await exportedNote.path());
+    await six.waitForFunction(()=>document.querySelector('.sn-card-text')?.textContent.includes('маяка'));
+    check(await six.locator('.sn-card').count()===1,'hosted note import works');
+    await six.getByRole('tab',{name:'Персонаж',exact:true}).click();
+    const cvSize=await rect(six,'#rpt-shell');
+    const standaloneSize=await six.evaluate(()=>JSON.stringify(Object.values(context.extensionSettings).find(x=>x.storageNamespace)?.panelSize));
+    await six.locator('#cv-toggle-preview').click();
+    await six.locator('#cv-toggle-preview').click();
+    check(JSON.stringify(await rect(six,'#rpt-shell'))===JSON.stringify(cvSize),'visual preview toggle keeps host geometry');
+    check(await six.evaluate(()=>JSON.stringify(Object.values(context.extensionSettings).find(x=>x.storageNamespace)?.panelSize))===standaloneSize,'visual preview preserves standalone size');
+    await six.locator('.cv-field-input').first().fill('Синяя куртка');
+    await six.waitForFunction(async()=>{
+        const db=localforage.createInstance({name:'character-visual',storeName:'wardrobe_data'});
+        const key=(await db.keys()).find(x=>x.includes('::chat::'));
+        return key && JSON.stringify(await db.getItem(key)).includes('Синяя куртка');
+    });
+    check(await six.evaluate(()=>Object.values(macros).some(fn=>fn().includes('Синяя куртка'))),'visual edits reach IndexedDB and macro');
+    await six.locator('#cv-save-as-new').click();
+    await six.locator('#cv-dialog-name').fill('Походный образ');
+    await six.locator('.cv-dialog-confirm').click();
+    await six.waitForFunction(()=>document.querySelector('.cv-editor-heading h2')?.textContent==='Походный образ');
+    await six.locator('#cv-nav-wardrobe').click();
+    check(await six.locator('.cv-wardrobe-toolbar').isVisible(),'visual wardrobe navigation works');
+    check((await six.locator('.cv-outfit-card h3').textContent())==='Походный образ','visual outfit saves to wardrobe');
+    await six.locator('.cv-apply-outfit').click();
+    await six.waitForFunction(()=>document.querySelector('.cv-field-input')?.value==='Синяя куртка');
+    check(true,'visual saved outfit applies from wardrobe');
+    await six.locator('#cv-nav-settings').click();
+    check(await six.locator('.cv-settings-grid').isVisible(),'visual settings navigation works');
+    await six.locator('#cv-nav-editor').click();
+    await six.locator('[data-module="visual"]').getByRole('button',{name:'Свернуть блок',exact:true}).click();
+    const collapsed=await rect(six,'[data-module="visual"]');
+    check(collapsed.height>25 && collapsed.height<140,'visual collapse preserves usable header');
+    await six.locator('[data-module="visual"]').getByRole('button',{name:'Раскрыть блок',exact:true}).click();
+    const snapshot=await data(six);
+    await settings(six);await six.getByLabel('Собирать расширения в общую панель',{exact:true}).uncheck();
+    check(await six.locator('[data-rpt-docked]').count()===0,'all six panels release');
+    await six.getByRole('button',{name:'Свернуть панель',exact:true}).click();
+    for(const p of ['sn','sg','cv']) {
+        await six.locator(`#${p}-button`).click();
+        check(await six.locator(`#${p}-panel`).isVisible(),`${p} original launcher works after release`);
+        await six.locator(`#${p}-close`).click();
+    }
+    await six.locator('#rpt-launcher').click();
+    await six.getByLabel('Собирать расширения в общую панель',{exact:true}).check();
+    await six.getByRole('button',{name:'Готово',exact:true}).click();
+    // Opening native windows legitimately updates their own layout/settings;
+    // assert only content and subscription counts for this round trip.
+    const restored=await data(six);
+    check(restored.metadata===snapshot.metadata && JSON.stringify(restored.events)===JSON.stringify(snapshot.events),'six-panel release/remount preserves metadata and subscriptions');
+    for(const width of [390,360]) {
+        await six.setViewportSize({width,height:900});
+        await six.waitForFunction(()=>document.getElementById('rpt-shell').getBoundingClientRect().right<=innerWidth);
+        for(const name of ['Персонаж','Сюжет']) {
+            await six.getByRole('tab',{name,exact:true}).click();
+            check(await six.locator('.rpt-page:not([hidden])').evaluate(el=>el.scrollWidth<=el.clientWidth+2),`${name} fits ${width}px`);
+        }
+        await six.getByRole('tab',{name:'Персонаж',exact:true}).click();
+        await six.locator('#cv-nav-wardrobe').click();
+        check(await six.locator('#cv-content').evaluate(el=>el.scrollWidth<=el.clientWidth+2),`wardrobe fits ${width}px`);
+        await six.locator('#cv-nav-settings').click();
+        check(await six.locator('#cv-content').evaluate(el=>el.scrollWidth<=el.clientWidth+2),`visual settings fit ${width}px`);
+        await six.locator('#cv-nav-editor').click();
+    }
+    await six.screenshot({path:'/tmp/roleplay-tools-six-qa.png'});
+    await six.reload();await six.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+    check(await six.getByRole('tab').count()===3,'suggested pages do not duplicate on reload');
+    await six.getByRole('tab',{name:'Персонаж',exact:true}).click();
+    await six.waitForFunction(()=>document.querySelector('.cv-field-input')?.value==='Синяя куртка');
+    check(true,'visual state reloads from IndexedDB');
+    await six.getByRole('tab',{name:'Сюжет',exact:true}).click();
+    check((await six.locator('.sn-card-text').textContent()).includes('маяка') && (await six.locator('.sg-card-text').textContent()).includes('маяку'),'stored notes and goals display after reload without manual refresh');
+    await six.close();
+    const upgrade=await browser.newPage({viewport:{width:1400,height:1000}});
+    upgrade.on('pageerror',error=>errors.push(error.message));
+    await upgrade.addInitScript(()=>{
+        if(localStorage.getItem('wani_roleplay_tools_layout_v1'))return;
+        localStorage.setItem('wani_roleplay_tools_layout_v1',JSON.stringify({
+            version:1,enabled:true,open:true,side:'left',geometry:{width:450,height:700,x:8,y:70},
+            active:'custom',pinContext:true,pages:[{id:'custom',name:'Мой Live'}],
+            modules:{thoughts:{page:'custom',order:1,weight:55,collapsed:false},relations:{page:'custom',order:0,weight:45,collapsed:false},context:{page:'custom',order:2,weight:15,collapsed:false}}
+        }));
+    });
+    await upgrade.goto(`${url}/?order=six`);
+    await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+    const migrated=await upgrade.evaluate(()=>JSON.parse(localStorage.getItem('wani_roleplay_tools_layout_v1')));
+    check(migrated.side==='left' && migrated.geometry.width===450 && migrated.modules.thoughts.page==='custom' && migrated.modules.thoughts.weight===55 && migrated.modules.relations.order===0,'upgrade preserves beta.1 custom geometry and module placement');
+    await settings(upgrade);
+    await upgrade.locator('.rpt-page-editor').filter({has:upgrade.locator('[data-page-name="story"]')}).getByRole('button',{name:'Удалить страницу, перенести блоки на соседнюю'}).click();
+    await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+    check(await upgrade.getByRole('tab',{name:'Сюжет',exact:true}).count()===0,'deleted suggested page stays deleted after reload');
+    await upgrade.close();
+    for(const order of ['six-last','six-none']) {
+        const p=await browser.newPage({viewport:{width:1280,height:900}});
+        p.on('pageerror',error=>errors.push(error.message));
+        await p.goto(`${url}/?order=${order}`);
+        await p.waitForSelector('#cv-button',{state:'attached'});
+        if(order==='six-last') {
+            await p.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+            check(true,'all six connect when host loads last');
+        } else {
+            for(const id of ['sn','sg','cv']) {
+                await p.locator(`#${id}-button`).click();
+                check(await p.locator(`#${id}-panel`).isVisible(),`${id} works without host installed`);
+                await p.locator(`#${id}-close`).click();
+            }
+        }
+        await p.close();
+    }
     for(const order of ['last','none']) {
         const other=await browser.newPage({viewport:{width:1280,height:900}});
         other.on('pageerror',error=>errors.push(error.message));

@@ -135,7 +135,15 @@ function start() {
 
     function state(id) {
         if (!Object.hasOwn(layout.modules, id)) {
-            layout.modules[id] = { page: layout.pages[0].id, order: modules.size, weight: 50, collapsed: false };
+            const suggested = modules.get(id)?.descriptor.defaultPage;
+            let page = layout.pages[0].id;
+            if (suggested && validId(suggested.id)) {
+                page = suggested.id;
+                if (!layout.pages.some(item => item.id === page)) {
+                    layout.pages.push({ id: page, name: String(suggested.name || 'Страница').slice(0, 40) });
+                }
+            }
+            layout.modules[id] = { page, order: modules.size, weight: 50, collapsed: false };
         }
         return layout.modules[id];
     }
@@ -200,6 +208,7 @@ function start() {
         record.controls.append(record.maxButton, record.collapseButton);
         modules.set(record.id, record);
         state(record.id);
+        save();
         if (layout.enabled) mount(record);
         renderPages();
         if (settingsOpen) renderSettings();
@@ -252,6 +261,7 @@ function start() {
             const entries = [...modules.values()].filter(record => record.mounted && !isPinned(record)
                 && state(record.id).page === page.id).sort((a, b) => state(a.id).order - state(b.id).order);
             const visibleEntries = expanded && page.id === layout.active ? entries.filter(record => record.id === expanded) : entries;
+            body.style.alignContent = visibleEntries.length && visibleEntries.every(record => state(record.id).collapsed) ? 'start' : 'stretch';
             const rows = [];
             let previous = null;
             for (const record of entries) {
@@ -432,7 +442,7 @@ function start() {
             row.append(name, move, remove); settingsPanel.append(row);
         }
         settingsPanel.append(make('div', 'rpt-label', 'Подключённые блоки'));
-        if (!modules.size) settingsPanel.append(make('p', 'rpt-hint', 'Установи тестовые версии Thoughts, Relations и Context с поддержкой Roleplay Tools.'));
+        if (!modules.size) settingsPanel.append(make('p', 'rpt-hint', 'Установи версии расширений Wani с поддержкой Roleplay Tools.'));
         for (const record of modules.values()) {
             const box = make('div', 'rpt-module-editor');
             const row = make('div', 'rpt-editor-row');
