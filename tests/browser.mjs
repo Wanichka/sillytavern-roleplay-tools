@@ -107,7 +107,7 @@ const data = page=>page.evaluate(()=>({
     events:events.counts(),prompts:promptCalls.length,
 }));
 const rect = (page,selector)=>page.locator(selector).boundingBox();
-const settings = page=>page.getByRole('button',{name:'Страницы и размещение',exact:true}).click();
+const settings = page=>page.getByRole('button',{name:'Pages and layout',exact:true}).click();
 async function drag(page,selector,dx,dy) {
     const box = await rect(page,selector); assert.ok(box,selector);
     const x=box.x+box.width/2,y=box.y+box.height/2;
@@ -166,20 +166,20 @@ try {
     const upper=await rect(page,'[data-module="thoughts"]');
     await drag(page,'.rpt-divider-grip',0,50);
     check((await rect(page,'[data-module="thoughts"]')).height>upper.height+35,'splitter changes panel proportions');
-    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Свернуть блок',exact:true}).click();
+    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Collapse block',exact:true}).click();
     check((await rect(page,'[data-module="thoughts"]')).height<100,'collapse leaves only panel header');
-    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Раскрыть блок'}).click();
-    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Развернуть блок'}).click();
+    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Uncollapse block'}).click();
+    await page.locator('[data-module="thoughts"]').getByRole('button',{name:'Expand to full page'}).click();
     check(!await page.locator('[data-module="relations"]').isVisible() && await page.locator('.rpt-footer').isVisible(),'maximize preserves pinned context');
-    await page.getByRole('button',{name:'Вернуть все блоки'}).click();
-    await settings(page);await page.getByRole('button',{name:'Добавить страницу'}).click();
-    await page.getByRole('textbox',{name:'Название страницы'}).nth(1).fill('Персонажи');
-    await page.getByRole('textbox',{name:'Название страницы'}).nth(1).press('Enter');
-    await page.getByRole('button',{name:'Готово',exact:true}).click();
+    await page.getByRole('button',{name:'Show all blocks'}).click();
+    await settings(page);await page.getByRole('button',{name:'Add page'}).click();
+    await page.getByRole('textbox',{name:'Page name'}).nth(1).fill('Персонажи');
+    await page.getByRole('textbox',{name:'Page name'}).nth(1).press('Enter');
+    await page.getByRole('button',{name:'Done',exact:true}).click();
     await settings(page);
-    const pageId=await page.getByRole('textbox',{name:'Название страницы'}).nth(1).getAttribute('data-page-name');
-    await page.getByLabel('Страница: Relationship Memory',{exact:true}).selectOption(pageId);
-    await page.getByRole('button',{name:'Готово',exact:true}).click();
+    const pageId=await page.getByRole('textbox',{name:'Page name'}).nth(1).getAttribute('data-page-name');
+    await page.getByLabel('Page: Relationship Memory',{exact:true}).selectOption(pageId);
+    await page.getByRole('button',{name:'Done',exact:true}).click();
     check(await page.locator('#ct-panel').isVisible() && !await page.locator('#rm-tracker-panel').isVisible(),'module moved to another page');
     await page.getByRole('tab',{name:'Персонажи',exact:true}).click();
     check(await page.locator('#rm-tracker-panel').isVisible() && await page.locator('.rpt-footer').isVisible(),'page switch and pinned footer');
@@ -190,17 +190,17 @@ try {
     await page.reload();await wait(page);
     check(await page.getByRole('tab',{name:'Персонажи',exact:true}).count()===1 && (await rect(page,'#rpt-shell')).width===after.width,'layout survives reload');
     const beforeDisable=await data(page);
-    await settings(page);await page.getByLabel('Собирать расширения в общую панель',{exact:true}).uncheck();
+    await settings(page);await page.getByLabel('Dock extensions into one panel',{exact:true}).uncheck();
     check(await page.locator('[data-rpt-docked]').count()===0,'disable restores all original panels');
-    await page.getByRole('button',{name:'Свернуть панель',exact:true}).click();
+    await page.getByRole('button',{name:'Hide panel',exact:true}).click();
     await page.locator('#ct-button').click();
     check(await page.locator('#ct-panel').isVisible(),'original launcher and window work after release');
     await page.locator('#rpt-launcher').click();
-    await page.getByLabel('Собирать расширения в общую панель',{exact:true}).check();
-    await page.getByRole('button',{name:'Готово',exact:true}).click();
+    await page.getByLabel('Dock extensions into one panel',{exact:true}).check();
+    await page.getByRole('button',{name:'Done',exact:true}).click();
     assert.deepEqual(await data(page),beforeDisable);checks++;console.log('PASS release/remount preserve RP state and do not double-subscribe');
-    await settings(page);await page.getByRole('button',{name:'Удалить страницу, перенести блоки на соседнюю'}).nth(1).click();
-    await page.getByRole('button',{name:'Готово',exact:true}).click();
+    await settings(page);await page.getByRole('button',{name:'Delete page, move its blocks to a neighbour'}).nth(1).click();
+    await page.getByRole('button',{name:'Done',exact:true}).click();
     check(await page.locator('#ct-panel').isVisible() && await page.locator('#rm-tracker-panel').isVisible(),'delete page transfers panels safely');
     await drag(page,'.rpt-header .rpt-brand',-200,-15);
     check(await page.locator('#rpt-shell').getAttribute('data-side')==='free','header moves window freely');
@@ -224,10 +224,10 @@ try {
     touch.on('pageerror',error=>errors.push(error.message));
     await touch.goto(url);await wait(touch);await send(touch);
     check(await touch.locator('#rpt-shell').evaluate(el=>el.scrollWidth<=el.clientWidth+2),'touch layout fits narrow phone');
-    await settings(touch);await touch.getByLabel('Context закреплён под вкладками',{exact:true}).uncheck();
-    await touch.getByRole('button',{name:'Готово',exact:true}).click();
+    await settings(touch);await touch.getByLabel('Context is visible on every page',{exact:true}).uncheck();
+    await touch.getByRole('button',{name:'Done',exact:true}).click();
     check(await touch.locator('.rpt-page [data-module="context"]').count()===1 && !await touch.locator('.rpt-footer').isVisible(),'context can become a regular page block');
-    await touch.locator('[data-module="context"]').getByRole('button',{name:'Свернуть блок',exact:true}).click();
+    await touch.locator('[data-module="context"]').getByRole('button',{name:'Collapse block',exact:true}).click();
     check(!await touch.locator('[data-module="context"] .ctt-stats').isVisible(),'regular context block can collapse');
     await touch.evaluate(()=>{
         document.documentElement.style.setProperty('--SmartThemeBlurTintColor','#f5f0e9');
@@ -303,22 +303,22 @@ try {
     await six.locator('#cv-nav-settings').click();
     check(await six.locator('.cv-settings-grid').isVisible(),'visual settings navigation works');
     await six.locator('#cv-nav-editor').click();
-    await six.locator('[data-module="visual"]').getByRole('button',{name:'Свернуть блок',exact:true}).click();
+    await six.locator('[data-module="visual"]').getByRole('button',{name:'Collapse block',exact:true}).click();
     const collapsed=await rect(six,'[data-module="visual"]');
     check(collapsed.height>25 && collapsed.height<140,'visual collapse preserves usable header');
-    await six.locator('[data-module="visual"]').getByRole('button',{name:'Раскрыть блок',exact:true}).click();
+    await six.locator('[data-module="visual"]').getByRole('button',{name:'Uncollapse block',exact:true}).click();
     const snapshot=await data(six);
-    await settings(six);await six.getByLabel('Собирать расширения в общую панель',{exact:true}).uncheck();
+    await settings(six);await six.getByLabel('Dock extensions into one panel',{exact:true}).uncheck();
     check(await six.locator('[data-rpt-docked]').count()===0,'all six panels release');
-    await six.getByRole('button',{name:'Свернуть панель',exact:true}).click();
+    await six.getByRole('button',{name:'Hide panel',exact:true}).click();
     for(const p of ['sn','sg','cv']) {
         await six.locator(`#${p}-button`).click();
         check(await six.locator(`#${p}-panel`).isVisible(),`${p} original launcher works after release`);
         await six.locator(`#${p}-close`).click();
     }
     await six.locator('#rpt-launcher').click();
-    await six.getByLabel('Собирать расширения в общую панель',{exact:true}).check();
-    await six.getByRole('button',{name:'Готово',exact:true}).click();
+    await six.getByLabel('Dock extensions into one panel',{exact:true}).check();
+    await six.getByRole('button',{name:'Done',exact:true}).click();
     // Opening native windows legitimately updates their own layout/settings;
     // assert only content and subscription counts for this round trip.
     const restored=await data(six);
@@ -368,7 +368,7 @@ try {
     check(Math.abs((await rect(upgrade,'[data-module="thoughts"]')).height-manualHeight)<2,'manual height survives reload');
     check(Math.abs((await rect(upgrade,'#rpt-shell')).height-manualFrame.height)<2,'coupled frame height survives reload');
     await settings(upgrade);
-    await upgrade.locator('.rpt-page-editor').filter({has:upgrade.locator('[data-page-name="story"]')}).getByRole('button',{name:'Удалить страницу, перенести блоки на соседнюю'}).click();
+    await upgrade.locator('.rpt-page-editor').filter({has:upgrade.locator('[data-page-name="story"]')}).getByRole('button',{name:'Delete page, move its blocks to a neighbour'}).click();
     await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
     check(await upgrade.getByRole('tab',{name:'Сюжет',exact:true}).count()===0,'deleted suggested page stays deleted after reload');
     await upgrade.close();
