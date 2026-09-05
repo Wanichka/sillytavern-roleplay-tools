@@ -122,6 +122,30 @@ async function send(page,thought='Нужно обсудить план.',trust=6
     await page.waitForFunction(()=>document.querySelector('#ct-body')?.textContent.includes('Алекс'));
     await page.waitForFunction(()=>document.querySelector('[data-ctt="visible"]')?.textContent===String(context.chat.length));
 }
+async function bottomResize(page,label) {
+    const tiles=page.locator('.rpt-page:not([hidden]) .rpt-tile:not([hidden])');
+    const first=await tiles.first().boundingBox(),last=await tiles.last().boundingBox();
+    const id=await tiles.last().getAttribute('data-module');
+    const shell=await rect(page,'#rpt-shell');
+    await drag(page,'.rpt-page:not([hidden]) .rpt-bottom-grip',0,-20);
+    check((await tiles.last().boundingBox()).height<last.height-10,`${label}: bottom grip shrinks last block`);
+    check(Math.abs((await tiles.first().boundingBox()).height-first.height)<2,`${label}: upper block keeps its height`);
+    assert.deepEqual(await rect(page,'#rpt-shell'),shell);
+    await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
+    check(Math.abs((await tiles.last().boundingBox()).height-last.height)<2,`${label}: keyboard grows last block`);
+    await page.getByRole('tab').first().click();
+    await page.evaluate(id=>WaniRoleplayTools.open(id),id);
+    check(Math.abs((await tiles.last().boundingBox()).height-last.height)<2,`${label}: custom height survives page activation`);
+    await page.locator('.rpt-page:not([hidden]) .rpt-divider-grip').press('ArrowDown');
+    const a=await tiles.first().boundingBox(),b=await tiles.last().boundingBox();
+    check(a.height>first.height && Math.abs(a.height+b.height-first.height-last.height)<2,`${label}: middle grip works with manual heights`);
+    const contextTop=await rect(page,'.rpt-footer');
+    for(let i=0;i<12;i++)await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
+    check(await page.locator('.rpt-page:not([hidden])').evaluate(el=>el.scrollHeight>el.clientHeight),`${label}: tall last block remains scrollable`);
+    assert.deepEqual(await rect(page,'.rpt-footer'),contextTop);
+    await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').dblclick();
+    check(await page.evaluate(id=>!Number.isFinite(JSON.parse(localStorage.getItem('wani_roleplay_tools_layout_v1')).modules[id].height),id),`${label}: double click restores automatic heights`);
+}
 try {
     const errors = [];
     const page = await browser.newPage({viewport:{width:1440,height:1000}});
@@ -129,6 +153,7 @@ try {
     await page.goto(url);await wait(page);await send(page);
     check(await page.locator('#rm-tracker-body').textContent().then(x=>x.includes('64%')), 'real parsers populate hosted panels');
     check(await page.locator('.rpt-footer [data-ctt="visible"]').textContent().then(x=>x==='1'), 'context uses chat events');
+    check(await page.locator('.rpt-footer').evaluate(el=>el.previousElementSibling.classList.contains('rpt-tabs') && el.nextElementSibling.classList.contains('rpt-workspace')),'pinned context sits between tabs and panels');
     const original = await data(page);
     const before=await rect(page,'#rpt-shell');
     await drag(page,'.rpt-resize-left',-130,130);
@@ -195,7 +220,7 @@ try {
     touch.on('pageerror',error=>errors.push(error.message));
     await touch.goto(url);await wait(touch);await send(touch);
     check(await touch.locator('#rpt-shell').evaluate(el=>el.scrollWidth<=el.clientWidth+2),'touch layout fits narrow phone');
-    await settings(touch);await touch.getByLabel('Context закреплён внизу всех страниц',{exact:true}).uncheck();
+    await settings(touch);await touch.getByLabel('Context закреплён под вкладками',{exact:true}).uncheck();
     await touch.getByRole('button',{name:'Готово',exact:true}).click();
     check(await touch.locator('.rpt-page [data-module="context"]').count()===1 && !await touch.locator('.rpt-footer').isVisible(),'context can become a regular page block');
     await touch.locator('[data-module="context"]').getByRole('button',{name:'Свернуть блок',exact:true}).click();
@@ -217,6 +242,7 @@ try {
     await six.getByRole('tab',{name:'Сюжет',exact:true}).click();
     check(await six.locator('#sn-panel').isVisible() && await six.locator('#sg-panel').isVisible(),'notes and goals share a page');
     check(await six.locator('.sn-empty').count()===1 && await six.locator('.sg-empty').count()===1,'new panels render on first mount');
+    await bottomResize(six,'Story');
     await six.locator('#sn-add').click();
     await six.locator('.sn-editor-input').fill('Черновик: встретиться у маяка.');
     await six.getByRole('tab',{name:'Live',exact:true}).click();
@@ -330,6 +356,11 @@ try {
     await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
     const migrated=await upgrade.evaluate(()=>JSON.parse(localStorage.getItem('wani_roleplay_tools_layout_v1')));
     check(migrated.side==='left' && migrated.geometry.width===450 && migrated.modules.thoughts.page==='custom' && migrated.modules.thoughts.weight===55 && migrated.modules.relations.order===0,'upgrade preserves beta.1 custom geometry and module placement');
+    await bottomResize(upgrade,'Thoughts last');
+    await upgrade.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
+    const manualHeight=await upgrade.locator('[data-module="thoughts"]').evaluate(el=>el.getBoundingClientRect().height);
+    await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
+    check(Math.abs((await rect(upgrade,'[data-module="thoughts"]')).height-manualHeight)<2,'manual height survives reload');
     await settings(upgrade);
     await upgrade.locator('.rpt-page-editor').filter({has:upgrade.locator('[data-page-name="story"]')}).getByRole('button',{name:'Удалить страницу, перенести блоки на соседнюю'}).click();
     await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);

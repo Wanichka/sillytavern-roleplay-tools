@@ -118,11 +118,11 @@
     align-content: stretch;
 }
 #rpt-shell .rpt-tile { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--rpt-soft); border-radius: 11px; }
-#rpt-shell .rpt-footer { flex: 0 0 auto; border-top: 1px solid var(--rpt-border); padding: 4px 9px 17px; }
+#rpt-shell .rpt-footer { flex: 0 0 auto; border-bottom: 1px solid var(--rpt-border); padding: 4px 9px 7px; }
 #rpt-shell .rpt-pinned { border: 0; border-radius: 0; }
 #rpt-shell .rpt-module-root { height: 100%; width: 100%; }
 #rpt-shell .rpt-divider { display: flex; justify-content: center; align-items: center; min-height: 12px; }
-#rpt-shell .rpt-divider-grip {
+#rpt-shell .rpt-divider-grip, #rpt-shell .rpt-bottom-grip {
     display: block;
     width: 100%;
     padding: 0;
@@ -135,7 +135,7 @@
     cursor: row-resize;
     touch-action: none;
 }
-#rpt-shell .rpt-divider-grip:hover { color: var(--rpt-accent); }
+#rpt-shell .rpt-divider-grip:hover, #rpt-shell .rpt-bottom-grip:hover { color: var(--rpt-accent); }
 #rpt-shell .rpt-resize {
     position: absolute;
     bottom: 0;
@@ -154,7 +154,6 @@
 #rpt-shell[data-side='left'] .rpt-resize-left, #rpt-shell[data-side='right'] .rpt-resize-right,
 #rpt-shell.rpt-mobile .rpt-resize { display: none; }
 #rpt-shell .rpt-workspace { margin-bottom: 16px; }
-#rpt-shell:has(.rpt-footer:not([hidden])) .rpt-workspace { margin-bottom: 0; }
 #rpt-shell .rpt-settings { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 12px 12px 25px; }
 #rpt-shell .rpt-settings-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; }
 #rpt-shell .rpt-settings-heading:not(:first-child) { margin-top: 18px; }

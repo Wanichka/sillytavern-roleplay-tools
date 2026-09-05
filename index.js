@@ -47,6 +47,7 @@ function readLayout() {
                 order: number(entry.order, 0),
                 weight: clamp(number(entry.weight, 50), 1, 1000),
                 collapsed: entry.collapsed === true,
+                ...(Number.isFinite(entry.height) ? { height: clamp(entry.height, 80, 4000) } : {}),
             };
         }
         // Defaults may refer to a page removed by the user.
@@ -117,13 +118,14 @@ function start() {
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', 'Страницы');
     const workspace = make('div', 'rpt-workspace');
-    const footer = make('footer', 'rpt-footer');
+    const footer = make('section', 'rpt-footer');
+    footer.setAttribute('aria-label', 'Context');
     const settingsPanel = make('section', 'rpt-settings');
     settingsPanel.hidden = true;
     settingsPanel.setAttribute('aria-label', 'Страницы и размещение');
     const resizeLeft = button('Размер окна (левый угол). Двойной щелчок — сброс', 'grip-lines', () => {}, 'rpt-resize rpt-resize-left');
     const resizeRight = button('Размер окна (правый угол). Двойной щелчок — сброс', 'grip-lines', () => {}, 'rpt-resize rpt-resize-right');
-    shell.append(header, tabs, workspace, footer, settingsPanel, resizeLeft, resizeRight);
+    shell.append(header, tabs, footer, workspace, settingsPanel, resizeLeft, resizeRight);
     const launcher = button('Roleplay Tools', 'layer-group', () => {
         layout.open = true;
         if (!layout.enabled) setSettings(true);
@@ -283,11 +285,16 @@ function start() {
                         body.append(makeDivider(previous, record));
                         rows.push('12px');
                     }
-                    rows.push(entry.collapsed ? 'auto' : `minmax(${record.descriptor.minHeight || 155}px, ${entry.weight}fr)`);
+                    rows.push(rowHeight(record));
                     previous = record;
                 }
                 body.append(record.tile);
             }
+            if (previous && !state(previous.id).collapsed && !expanded) {
+                body.append(makeBottomGrip(previous));
+                rows.push('12px');
+            }
+            if (!expanded && visibleEntries.some(record => Number.isFinite(state(record.id).height))) rows.push('minmax(0, 1fr)');
             body.style.gridTemplateRows = rows.join(' ');
             if (!entries.length) {
                 const empty = make('div', 'rpt-empty');
@@ -325,6 +332,69 @@ function start() {
         }
     }
 
+    function rowHeight(record) {
+        const entry = state(record.id);
+        if (entry.collapsed) return 'auto';
+        const minimum = record.descriptor.minHeight || 155;
+        if (!expanded && Number.isFinite(entry.height)) return `${Math.max(minimum, entry.height)}px`;
+        return `minmax(${minimum}px, ${entry.weight}fr)`;
+    }
+    function updateRows(page) {
+        const rows = [...page.children].filter(node => !node.hidden).map(node => {
+            if (node.classList.contains('rpt-divider')) return '12px';
+            const record = modules.get(node.dataset.module);
+            return record ? rowHeight(record) : 'auto';
+        });
+        if (!expanded && [...page.querySelectorAll('.rpt-tile:not([hidden])')]
+            .some(tile => Number.isFinite(state(tile.dataset.module).height))) rows.push('minmax(0, 1fr)');
+        page.style.gridTemplateRows = rows.join(' ');
+    }
+    function freezeHeights(page) {
+        for (const tile of page.querySelectorAll('.rpt-tile:not([hidden]):not(.rpt-collapsed)')) {
+            state(tile.dataset.module).height = tile.getBoundingClientRect().height;
+        }
+    }
+    function makeBottomGrip(record) {
+        const divider = make('div', 'rpt-divider rpt-bottom-divider');
+        const grip = button('Высота последнего блока. Двойной щелчок — автоматическая высота', 'grip-lines', () => {}, 'rpt-bottom-grip');
+        divider.append(grip);
+        let dragging = null;
+        const resize = height => {
+            state(record.id).height = clamp(height, record.descriptor.minHeight || 155, 4000);
+            updateRows(record.tile.parentNode);
+        };
+        grip.addEventListener('pointerdown', event => {
+            if (event.button !== 0) return;
+            event.preventDefault();
+            const page = record.tile.parentNode;
+            freezeHeights(page);
+            dragging = { y: event.clientY, height: state(record.id).height, scroll: page.scrollTop };
+            grip.setPointerCapture(event.pointerId);
+        });
+        grip.addEventListener('pointermove', event => {
+            if (!dragging) return;
+            resize(dragging.height + event.clientY - dragging.y + record.tile.parentNode.scrollTop - dragging.scroll);
+        });
+        const finish = () => { if (dragging) { dragging = null; save(); } };
+        grip.addEventListener('pointerup', finish);
+        grip.addEventListener('pointercancel', finish);
+        grip.addEventListener('lostpointercapture', finish);
+        grip.addEventListener('keydown', event => {
+            if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+            event.preventDefault();
+            freezeHeights(record.tile.parentNode);
+            resize(state(record.id).height + (event.key === 'ArrowDown' ? 20 : -20));
+            save();
+        });
+        grip.addEventListener('dblclick', () => {
+            for (const item of modules.values()) {
+                if (state(item.id).page === state(record.id).page) delete state(item.id).height;
+            }
+            renderPages(); save();
+        });
+        return divider;
+    }
+
     function makeDivider(upper, lower) {
         const divider = make('div', 'rpt-divider');
         const disabled = state(upper.id).collapsed || state(lower.id).collapsed;
@@ -335,6 +405,12 @@ function start() {
             const total = state(upper.id).weight + state(lower.id).weight;
             state(upper.id).weight = total * ratio;
             state(lower.id).weight = total * (1 - ratio);
+            if (Number.isFinite(state(upper.id).height) || Number.isFinite(state(lower.id).height)) {
+                const sum = upper.tile.getBoundingClientRect().height + lower.tile.getBoundingClientRect().height;
+                const minimum = upper.descriptor.minHeight || 155;
+                state(upper.id).height = clamp(sum * ratio, minimum, Math.max(minimum, sum - (lower.descriptor.minHeight || 155)));
+                state(lower.id).height = sum - state(upper.id).height;
+            }
         };
         let dragging = null;
         grip.addEventListener('pointerdown', event => {
@@ -349,15 +425,7 @@ function start() {
             const minUpper = upper.descriptor.minHeight || 155, minLower = lower.descriptor.minHeight || 155;
             const height = clamp(dragging.upper + event.clientY - dragging.start, minUpper, Math.max(minUpper, dragging.sum - minLower));
             setRatio(height / dragging.sum);
-            const page = upper.tile.parentNode;
-            const children = [...page.children];
-            const rows = children.map(node => {
-                if (node.classList.contains('rpt-divider')) return '12px';
-                const id = node.dataset.module;
-                if (!id || node.hidden) return null;
-                return state(id).collapsed ? 'auto' : `minmax(${modules.get(id).descriptor.minHeight || 155}px, ${state(id).weight}fr)`;
-            }).filter(Boolean);
-            page.style.gridTemplateRows = rows.join(' ');
+            updateRows(upper.tile.parentNode);
         });
         const finish = () => { if (dragging) { dragging = null; save(); } };
         grip.addEventListener('pointerup', finish);
@@ -367,7 +435,10 @@ function start() {
             if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
             event.preventDefault();
             const total = state(upper.id).weight + state(lower.id).weight;
-            setRatio(clamp(state(upper.id).weight / total + (event.key === 'ArrowDown' ? .05 : -.05), .1, .9));
+            const ratio = Number.isFinite(state(upper.id).height) || Number.isFinite(state(lower.id).height)
+                ? upper.tile.getBoundingClientRect().height / (upper.tile.getBoundingClientRect().height + lower.tile.getBoundingClientRect().height)
+                : state(upper.id).weight / total;
+            setRatio(clamp(ratio + (event.key === 'ArrowDown' ? .05 : -.05), .1, .9));
             renderPages(); save();
             const page = document.getElementById(`rpt-page-${layout.active}`);
             const grips = [...page.querySelectorAll('.rpt-divider-grip')];
@@ -399,7 +470,7 @@ function start() {
             for (const record of modules.values()) enabled ? mount(record) : release(record);
             renderPages(); save();
         });
-        toggle('Context закреплён внизу всех страниц', layout.pinContext, value => {
+        toggle('Context закреплён под вкладками', layout.pinContext, value => {
             layout.pinContext = value; expanded = null; renderPages(); renderSettings(); save();
         });
         const positionLabel = make('label', 'rpt-field', 'Положение окна');

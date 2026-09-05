@@ -1,12 +1,18 @@
-# Roleplay Tools · 0.1.0-beta.2
+# Roleplay Tools · 0.1.0-beta.3
 
 Общая панель для расширений Wani в SillyTavern. Страницы можно настраивать: несколько расширений одновременно на одной странице, разные наборы на других. Расширения остаются самостоятельными и продолжают обрабатывать сообщения своим кодом.
 
-Подключены **Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** и **Story Goals**. На странице **Live** сразу видны Thoughts и Relations; Context закреплён внизу. При первом подключении Visual создаётся страница **Персонаж**, а для Notes и Goals — общая страница **Сюжет**. Состав страниц и порядок блоков можно менять.
+Подключены **Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** и **Story Goals**. На странице **Live** сразу видны Thoughts и Relations; Context закреплён сверху, под вкладками. При первом подключении Visual создаётся страница **Персонаж**, а для Notes и Goals — общая страница **Сюжет**. Состав страниц и порядок блоков можно менять.
+
+## Обновление с beta.2
+
+Обнови только Roleplay Tools до `0.1.0-beta.3` на ветке `roleplay-tools-integration` и перезагрузи страницу Tavern. Адаптеры шести расширений обновлять не требуется.
+
+Context перенесён под вкладки. Под последним раскрытым блоком страницы добавлена ручка высоты: тяни её вверх/вниз или используй стрелки на клавиатуре. Она меняет последний блок отдельно от соседнего; при нехватке места страница прокручивается. Высоты сохраняются после перезагрузки. Двойной щелчок по нижней ручке возвращает автоматические пропорции всех блоков этой страницы. Размер всей оболочки по-прежнему меняется за нижние углы.
 
 ## Обновление с beta.1
 
-1. Обнови Roleplay Tools обычной кнопкой обновления в Tavern, оставаясь на ветке `roleplay-tools-integration`. Версия оболочки должна стать `0.1.0-beta.2`.
+1. Обнови Roleplay Tools обычной кнопкой обновления в Tavern, оставаясь на ветке `roleplay-tools-integration`. Версия оболочки должна стать `0.1.0-beta.3`.
 2. У Character Visual, Story Notes и Story Goals выбери **Switch branch / Сменить ветку → origin/roleplay-tools-integration**. Уже установленным Thoughts, Relations и Context менять ветки не требуется.
 3. Полностью обнови страницу Tavern.
 
@@ -28,7 +34,7 @@ roleplay-tools-integration
 
 | Расширение | Репозиторий | Версия в тестовой ветке |
 | --- | --- | --- |
-| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.2 |
+| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.3 |
 | Character Thoughts | [sillytavern-character-thoughts](https://github.com/Wanichka/sillytavern-character-thoughts/tree/roleplay-tools-integration) | 1.2.1-beta.1 |
 | Relationship Memory Tracker | [sillytavern-relationship-memory-tracker](https://github.com/Wanichka/sillytavern-relationship-memory-tracker/tree/roleplay-tools-integration) | 2.4.1-beta.1 |
 | Context Tracker | [sillytavern-context-tracker](https://github.com/Wanichka/sillytavern-context-tracker/tree/roleplay-tools-integration) | 1.0.1-beta.1 |
@@ -45,7 +51,7 @@ roleplay-tools-integration
 - **Размер окна:** тяни нижний угол по ширине и высоте. Двойной щелчок по нему возвращает стандартный размер. Минимум на компьютере — 320 × 300 px, максимум ограничен экраном.
 - **Положение:** тяни заголовок Roleplay Tools; в настройках можно выбрать левую или правую сторону. Привязка ставит окно у края и не сужает сам чат.
 - **Высота блоков:** тяни разделитель между ними. Он также поддерживает стрелки вверх/вниз на клавиатуре. У каждой панели собственная прокрутка; если окно слишком низкое для всех блоков, появляется общая прокрутка страницы.
-- **Свернуть / развернуть блок:** кнопки в заголовке блока оставляют только заголовок или временно отдают ему всю страницу. Закреплённый Context остаётся внизу.
+- **Свернуть / развернуть блок:** кнопки в заголовке блока оставляют только заголовок или временно отдают ему всю страницу. Закреплённый Context остаётся под вкладками.
 - **Страницы:** кнопка настроек в заголовке оболочки позволяет создавать, переименовывать, переставлять и удалять страницы. Для каждого блока выбирается страница и порядок. Удаление страницы переносит её блоки на другую страницу.
 - **Context:** можно закрепить на всех страницах или назначить обычным блоком на одну. Его собственные настройки остаются в разделе расширений Tavern.
 - **Свернуть окно:** крестик оболочки оставляет кнопку Roleplay Tools. Обработка сообщений расширениями продолжается.
