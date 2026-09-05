@@ -1,18 +1,20 @@
-# Roleplay Tools · 0.1.0
+# Roleplay Tools · 0.1.1
 
-Общая панель для расширений Wani в SillyTavern. На одной странице можно разместить несколько расширений одновременно, а на других собрать другие наборы. Расширения остаются самостоятельными и обрабатывают сообщения своим кодом.
+A shared panel for Wani's SillyTavern extensions. Several extensions can sit on one page, while other pages hold different sets. The extensions stay independent and keep processing messages with their own code.
 
-Подключены **Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** и **Story Goals**. По умолчанию Thoughts и Relations находятся на **Live**, Visual — на странице **Персонаж**, а Notes и Goals — вместе на странице **Сюжет**. Context закреплён сверху, под вкладками. Состав страниц и порядок блоков можно менять.
+**Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** and **Story Goals** are supported. By default Thoughts and Relations sit on **Live**, Visual gets a page of its own, and Notes and Goals share a third page. Context is pinned at the top, below the tabs, and stays visible on every page. Page contents and block order can be changed at any time.
 
-## Установка через GitHub
+The interface is English by default; Russian can be selected in the shell settings. Note that the default page names for Visual, Notes and Goals are supplied by those extensions and are currently Russian (`Персонаж`, `Сюжет`). Rename them in the settings, or wait for the extensions to ship neutral names.
 
-1. Открой **Расширения → Установить расширение** и вставь `https://github.com/Wanichka/sillytavern-roleplay-tools`. Поле ветки можно оставить пустым: основная ветка — `main`.
-2. Обнови установленные расширения из таблицы до указанных версий или новее. Можно подключить только те, которыми пользуешься. Если они ещё на тестовой ветке, сначала переключи их на `main`, затем обнови.
-3. Полностью обнови страницу Tavern.
+## Installing from GitHub
 
-| Расширение | Репозиторий | Стабильная версия с интеграцией |
+1. Open **Extensions → Install extension** and paste `https://github.com/Wanichka/sillytavern-roleplay-tools`. The branch field can stay empty — the default branch is `main`.
+2. Update the installed extensions from the table to the listed versions or newer. You only need the ones you actually use. If any are still on a test branch, switch them to `main` first, then update.
+3. Fully reload the Tavern page.
+
+| Extension | Repository | Stable version with integration |
 | --- | --- | --- |
-| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools) | 0.1.0 |
+| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools) | 0.1.1 |
 | Character Thoughts | [sillytavern-character-thoughts](https://github.com/Wanichka/sillytavern-character-thoughts) | 1.2.1 |
 | Relationship Memory Tracker | [sillytavern-relationship-memory-tracker](https://github.com/Wanichka/sillytavern-relationship-memory-tracker) | 2.4.1 |
 | Context Tracker | [sillytavern-context-tracker](https://github.com/Wanichka/sillytavern-context-tracker) | 1.0.1 |
@@ -20,38 +22,39 @@
 | Story Notes | [sillytavern-story-notes](https://github.com/Wanichka/sillytavern-story-notes) | 0.1.1 |
 | Story Goals | [sillytavern-story-goals](https://github.com/Wanichka/sillytavern-story-goals) | 0.1.1 |
 
-Инструкция сверена с интерфейсом SillyTavern 1.18.0. Автоматическое обновление в манифестах отключено; обновляй расширения обычной кнопкой в Tavern.
+These instructions were checked against the SillyTavern 1.18.0 interface. Auto-update is disabled in the manifests; update the extensions with the usual button in Tavern.
 
-## Как пользоваться
+## Using it
 
-- **Размер окна:** тяни нижний угол по ширине и высоте. Двойной щелчок по нему возвращает стандартный размер. Минимум на компьютере — 320 × 300 px, максимум ограничен экраном.
-- **Положение:** тяни заголовок Roleplay Tools; в настройках можно выбрать левую или правую сторону. Привязка ставит окно у края и не сужает сам чат.
-- **Высота блоков:** разделитель между блоками меняет их пропорции. Нижняя ручка под последним блоком меняет его высоту вместе с общей рамкой; верхний край окна и соседний блок остаются на месте. Рамка растёт до края экрана, затем появляется прокрутка. Ручки поддерживают стрелки на клавиатуре; двойной щелчок по нижней ручке возвращает автоматические пропорции страницы. Размеры сохраняются после перезагрузки.
-- **Свернуть / развернуть блок:** кнопки в заголовке блока оставляют только заголовок или временно отдают ему всю страницу. Закреплённый Context остаётся под вкладками.
-- **Страницы:** кнопка настроек в заголовке оболочки позволяет создавать, переименовывать, переставлять и удалять страницы. Для каждого блока выбирается страница и порядок. Удаление страницы переносит её блоки на другую страницу.
-- **Context:** можно закрепить на всех страницах или назначить обычным блоком на одну. Его собственные настройки остаются в разделе расширений Tavern.
-- **Свернуть окно:** крестик оболочки оставляет кнопку Roleplay Tools. Обработка сообщений расширениями продолжается.
-- **Отдельные окна:** сними «Собирать расширения в общую панель». Вернутся исходные панели и кнопки. Включение этой настройки снова собирает их вместе.
+- **Window size:** drag a bottom corner to change width and height. Double-clicking it restores the default size. The minimum on desktop is 320 × 300 px; the maximum is bounded by the screen.
+- **Position:** drag the Roleplay Tools header. The settings let you snap the window to the left or the right edge; snapping does not narrow the chat itself.
+- **Block heights:** the divider between two blocks changes their proportions. The grip below the last block changes that block's height together with the window frame, leaving the top edge and the neighbouring block in place. The frame grows until it reaches the screen edge, after which the page scrolls. Both grips accept arrow keys, and double-clicking the bottom grip restores the page's automatic proportions. Sizes survive a reload.
+- **Collapse / expand a block:** the buttons in a block's header leave only its header, or hand it the whole page for a moment. Pinned Context is unaffected.
+- **Pages:** the settings button in the shell header creates, renames, reorders and deletes pages. Every block picks its page and its order there. Deleting a page moves its blocks to another page rather than discarding them.
+- **Context:** it can be pinned so it shows on every page, or treated as an ordinary block living on one page. Its own settings stay in Tavern's extension panel.
+- **Hiding the window:** the close button leaves a Roleplay Tools launcher behind. The extensions keep processing messages while it is hidden.
+- **Separate windows:** clear **Dock extensions into one panel** and the original panels and buttons come back. Ticking it again collects them into the shell.
+- **Language:** pick English or Russian in the settings. Page names you have already typed are never translated.
 
-Один экземпляр расширения занимает одно место: блок можно перенести, но нельзя дублировать на нескольких страницах. При ширине экрана до 600 px оболочка занимает почти весь экран; свободное изменение размеров отключается. На планшете шире 600 px доступны перетаскивание и изменение размера.
+One instance of an extension takes one slot: a block can be moved but not duplicated across pages. On screens narrower than 600 px the shell takes up almost the whole screen and free resizing is disabled. On tablets wider than 600 px dragging and resizing both work.
 
-Палитра берётся из темы Tavern: цвет фона, текста и акцента. Закругления, рамки, заголовки и кнопки оформлены в стиле остальных расширений Wani.
+The palette comes from the Tavern theme — background, text and accent colours. Corners, borders, headings and buttons follow the style of the other Wani extensions.
 
-## Данные и отдельные окна
+## Data and separate windows
 
-Roleplay Tools сохраняет **только раскладку** в `localStorage` под ключом `wani_roleplay_tools_layout_v1`. Она общая для чатов в этом браузере и на этом адресе Tavern; между устройствами не синхронизируется. Очистка данных сайта удалит раскладку.
+Roleplay Tools stores **the layout only**, in `localStorage` under the key `wani_roleplay_tools_layout_v1`. It is shared across chats in this browser at this Tavern address and does not sync between devices. Clearing site data removes the layout.
 
-Мысли, профили, аватары, память отношений, настройки токенов и промпты по-прежнему принадлежат исходным расширениям. Интеграция не меняет их формат хранения и не переносит данные в оболочку.
+Thoughts, profiles, avatars, relationship memory, token settings and prompts still belong to the original extensions. The integration does not change how they are stored and does not move any data into the shell.
 
-Чтобы вернуть отдельные окна, сними «Собирать расширения в общую панель» в настройках оболочки. Можно также отключить Roleplay Tools в менеджере Tavern и перезагрузить страницу. Подключённые расширения продолжат работать самостоятельно; оставь их на `main`.
+To get separate windows back, clear **Dock extensions into one panel** in the shell settings. You can also disable Roleplay Tools in Tavern's manager and reload the page. The docked extensions keep working on their own; leave them on `main`.
 
-## Проверка
+## Testing
 
-Браузерный тест загружает реальные файлы шести расширений. Он проверяет разбор тестового сообщения, изменение размера окна и пропорций, сворачивание и разворачивание блоков, перенос между страницами, закрепление Context, сохранение раскладки, отключение/включение оболочки, обновление скрытой страницы, порядок загрузки и отсутствие оболочки. Дополнительно проверяются черновики и сохранение заметок/целей, выполнение шагов, поля Visual, его макрос и сохранение в настоящем IndexedDB через localforage. При операциях с раскладкой сравниваются данные, настройки, число обработчиков событий и вызовов промпта.
+The browser test loads the real files of all six extensions. It covers parsing a test message, resizing the window and the block proportions, collapsing and expanding blocks, moving blocks between pages, pinning Context, persisting the layout, disabling and re-enabling the shell, updates arriving on a hidden page, load order, and behaviour when the shell is absent. It also checks note and goal drafts and saving, step execution, Visual's fields and macro, and writes to a real IndexedDB through localforage. Around every layout operation it compares data, settings, the number of event subscriptions and the number of prompt calls.
 
-Стабильный выпуск использует тот же рабочий код, что проверенная beta.4; последний прогон стенда — 96 успешных проверок. В стенде заменены API контекста и сервер Tavern. При последующих изменениях полезен также короткий сценарий в настоящей Tavern: открыть чат → получить ответ → переключить страницу → изменить размер → перезагрузить страницу → отключить сборку в общую панель.
+The bench locates elements by their **English** labels, since English is the default interface language; keep new checks in English too, so the bench does not depend on the language setting. Only Tavern's context API and server are stubbed. After any change, a short run in a real Tavern is still worth doing: open a chat → get a reply → switch pages → resize → reload → turn off docking.
 
-Для повторения автоматической проверки нужен Node.js 22+, Playwright и localforage. Расположи версии репозиториев с интеграцией в соседних каталогах с именами `character-thoughts`, `relationship-memory-tracker`, `context-tracker`, `character-visual`, `story-notes`, `story-goals`. При другом расположении родительский каталог задаётся через `RPT_EXTENSIONS_DIR`.
+Reproducing the automated check needs Node.js 22+, Playwright and localforage. Put the integration-ready repositories in sibling directories named `character-thoughts`, `relationship-memory-tracker`, `context-tracker`, `character-visual`, `story-notes`, `story-goals`. For any other layout, point `RPT_EXTENSIONS_DIR` at the parent directory.
 
 ```sh
 npm install --no-save playwright localforage
@@ -59,15 +62,15 @@ npx playwright install chromium
 node tests/browser.mjs
 ```
 
-## Подключение следующих расширений
+## Adding another extension
 
-API публикуется как `window.WaniRoleplayTools` версии 1. Событие `wani-roleplay-tools:ready` позволяет подключиться, если оболочка загрузилась позже. Пример адаптера есть в репозиториях трекеров: `roleplay-tools-adapter.js`.
+The API is published as `window.WaniRoleplayTools`, version 1. The `wani-roleplay-tools:ready` event lets an extension connect when the shell loads later than it does. Each tracker repository ships an example adapter as `roleplay-tools-adapter.js`.
 
 ```js
 window.WaniRoleplayTools?.register({
     id: 'example',
     title: 'Example',
-    defaultPage: { id: 'example-page', name: 'Пример' }, // только первое подключение
+    defaultPage: { id: 'example-page', name: 'Example' }, // first connection only
     element: existingPanel,
     launcher: existingButton,
     controls: existingHeader,
@@ -79,8 +82,8 @@ window.WaniRoleplayTools?.register({
 });
 ```
 
-Передаётся **исходный DOM-элемент**, без клонирования. При подключении он получает `data-rpt-docked="true"`; собственные обработчики размеров и перетаскивания должны пропускать такой режим. Стили встроенного режима следует ограничивать селекторами `#rpt-shell` и `[data-rpt-docked]`. `controls` задаёт место для кнопок сворачивания и разворачивания; `launcher` — необязательная исходная кнопка расширения. `onShow` предназначен для отображения актуального состояния, а не повторного запуска парсера или регистрации событий.
+Pass **the original DOM element**, not a clone. While docked it carries `data-rpt-docked="true"`, and the extension's own resize and drag handlers must skip that mode. Styles for the docked mode should be scoped to `#rpt-shell` and `[data-rpt-docked]`. `controls` marks where the collapse and expand buttons go; `launcher` is the extension's own optional button. `onShow` is meant for refreshing what is displayed, not for re-running a parser or subscribing to events again.
 
-`open(id)` открывает страницу блока, `isDocked(id)` проверяет его размещение, `unregister(id)` возвращает блок на прежнее место. `destroy()` возвращает все элементы и удаляет оболочку; обычному пользователю достаточно настройки отдельных окон или отключения расширения в Tavern.
+`open(id)` opens a block's page and `unregister(id)` returns a block to where it came from. Checking placement needs no API at all: a docked element carries `data-rpt-docked="true"` (the adapter exposes this as `isRoleplayDocked`). `destroy()` returns every element and removes the shell; for ordinary use, the separate-windows setting or disabling the extension in Tavern is enough.
 
-Оболочка не может автоматически встроить произвольное стороннее расширение: каждому нужен небольшой адаптер, учитывающий его DOM, стили и обработчики.
+The shell cannot dock an arbitrary third-party extension on its own: each one needs a small adapter that accounts for its DOM, styles and handlers.
