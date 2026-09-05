@@ -130,9 +130,11 @@ async function bottomResize(page,label) {
     await drag(page,'.rpt-page:not([hidden]) .rpt-bottom-grip',0,-20);
     check((await tiles.last().boundingBox()).height<last.height-10,`${label}: bottom grip shrinks last block`);
     check(Math.abs((await tiles.first().boundingBox()).height-first.height)<2,`${label}: upper block keeps its height`);
-    assert.deepEqual(await rect(page,'#rpt-shell'),shell);
+    const shrunk=await rect(page,'#rpt-shell');
+    check(Math.abs(shrunk.height-shell.height+20)<2 && shrunk.y===shell.y && shrunk.width===shell.width,`${label}: frame shrinks with block and keeps top edge`);
     await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
     check(Math.abs((await tiles.last().boundingBox()).height-last.height)<2,`${label}: keyboard grows last block`);
+    check(Math.abs((await rect(page,'#rpt-shell')).height-shell.height)<2,`${label}: frame grows with keyboard resize`);
     await page.getByRole('tab').first().click();
     await page.evaluate(id=>WaniRoleplayTools.open(id),id);
     check(Math.abs((await tiles.last().boundingBox()).height-last.height)<2,`${label}: custom height survives page activation`);
@@ -140,8 +142,10 @@ async function bottomResize(page,label) {
     const a=await tiles.first().boundingBox(),b=await tiles.last().boundingBox();
     check(a.height>first.height && Math.abs(a.height+b.height-first.height-last.height)<2,`${label}: middle grip works with manual heights`);
     const contextTop=await rect(page,'.rpt-footer');
-    for(let i=0;i<12;i++)await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
+    for(let i=0;i<30;i++)await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
     check(await page.locator('.rpt-page:not([hidden])').evaluate(el=>el.scrollHeight>el.clientHeight),`${label}: tall last block remains scrollable`);
+    const capped=await rect(page,'#rpt-shell');
+    check(capped.y===shell.y && capped.y+capped.height<=page.viewportSize().height-7,`${label}: growing frame stops at screen edge`);
     assert.deepEqual(await rect(page,'.rpt-footer'),contextTop);
     await page.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').dblclick();
     check(await page.evaluate(id=>!Number.isFinite(JSON.parse(localStorage.getItem('wani_roleplay_tools_layout_v1')).modules[id].height),id),`${label}: double click restores automatic heights`);
@@ -359,8 +363,10 @@ try {
     await bottomResize(upgrade,'Thoughts last');
     await upgrade.locator('.rpt-page:not([hidden]) .rpt-bottom-grip').press('ArrowDown');
     const manualHeight=await upgrade.locator('[data-module="thoughts"]').evaluate(el=>el.getBoundingClientRect().height);
+    const manualFrame=await rect(upgrade,'#rpt-shell');
     await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);
     check(Math.abs((await rect(upgrade,'[data-module="thoughts"]')).height-manualHeight)<2,'manual height survives reload');
+    check(Math.abs((await rect(upgrade,'#rpt-shell')).height-manualFrame.height)<2,'coupled frame height survives reload');
     await settings(upgrade);
     await upgrade.locator('.rpt-page-editor').filter({has:upgrade.locator('[data-page-name="story"]')}).getByRole('button',{name:'Удалить страницу, перенести блоки на соседнюю'}).click();
     await upgrade.reload();await upgrade.waitForFunction(()=>document.querySelectorAll('[data-rpt-docked]').length===6);

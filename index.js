@@ -356,24 +356,41 @@ function start() {
     }
     function makeBottomGrip(record) {
         const divider = make('div', 'rpt-divider rpt-bottom-divider');
-        const grip = button('Высота последнего блока. Двойной щелчок — автоматическая высота', 'grip-lines', () => {}, 'rpt-bottom-grip');
+        const grip = button('Высота блока и окна. Двойной щелчок — автоматическая высота', 'grip-lines', () => {}, 'rpt-bottom-grip');
         divider.append(grip);
         let dragging = null;
         const resize = height => {
+            const page = record.tile.parentNode;
+            const rect = shell.getBoundingClientRect();
+            const chromeHeight = rect.height - page.clientHeight;
             state(record.id).height = clamp(height, record.descriptor.minHeight || 155, 4000);
-            updateRows(record.tile.parentNode);
+            updateRows(page);
+            // Fit the frame to the actual stack, not the grid's empty space or
+            // its scrollHeight (both can still reflect the old frame height).
+            // Keep the top edge anchored; overflow starts only at screen limits.
+            const vp = viewport();
+            if (vp.w > 600) {
+                const css = getComputedStyle(page);
+                const padding = parseFloat(css.paddingTop) + parseFloat(css.paddingBottom);
+                const contentHeight = [...page.children].filter(node => !node.hidden)
+                    .reduce((sum, node) => sum + node.getBoundingClientRect().height, padding);
+                const maxHeight = Math.max(1, vp.y + vp.h - rect.top - 8);
+                layout.geometry.height = clamp(chromeHeight + contentHeight, Math.min(300, maxHeight), maxHeight);
+                layout.geometry.y = rect.top;
+                fitWindow();
+            }
         };
         grip.addEventListener('pointerdown', event => {
             if (event.button !== 0) return;
             event.preventDefault();
             const page = record.tile.parentNode;
             freezeHeights(page);
-            dragging = { y: event.clientY, height: state(record.id).height, scroll: page.scrollTop };
+            dragging = { y: event.clientY, height: state(record.id).height };
             grip.setPointerCapture(event.pointerId);
         });
         grip.addEventListener('pointermove', event => {
             if (!dragging) return;
-            resize(dragging.height + event.clientY - dragging.y + record.tile.parentNode.scrollTop - dragging.scroll);
+            resize(dragging.height + event.clientY - dragging.y);
         });
         const finish = () => { if (dragging) { dragging = null; save(); } };
         grip.addEventListener('pointerup', finish);

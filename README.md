@@ -1,18 +1,22 @@
-# Roleplay Tools · 0.1.0-beta.3
+# Roleplay Tools · 0.1.0-beta.4
 
 Общая панель для расширений Wani в SillyTavern. Страницы можно настраивать: несколько расширений одновременно на одной странице, разные наборы на других. Расширения остаются самостоятельными и продолжают обрабатывать сообщения своим кодом.
 
 Подключены **Character Thoughts**, **Relationship Memory Tracker**, **Context Tracker**, **Character Visual**, **Story Notes** и **Story Goals**. На странице **Live** сразу видны Thoughts и Relations; Context закреплён сверху, под вкладками. При первом подключении Visual создаётся страница **Персонаж**, а для Notes и Goals — общая страница **Сюжет**. Состав страниц и порядок блоков можно менять.
 
+## Обновление с beta.3
+
+Обнови только Roleplay Tools до `0.1.0-beta.4` на тестовой ветке и перезагрузи Tavern. Нижняя ручка теперь меняет высоту последнего блока **вместе с общей рамкой**. Верхний край окна и соседние блоки остаются на месте. Рамка растёт до нижней границы экрана; дальше содержимое прокручивается. На узком экране до 600 px сохраняется режим почти полного экрана. Размер блока и рамки сохраняется после перезагрузки.
+
 ## Обновление с beta.2
 
-Обнови только Roleplay Tools до `0.1.0-beta.3` на ветке `roleplay-tools-integration` и перезагрузи страницу Tavern. Адаптеры шести расширений обновлять не требуется.
+Обнови только Roleplay Tools до `0.1.0-beta.4` на ветке `roleplay-tools-integration` и перезагрузи страницу Tavern. Адаптеры шести расширений обновлять не требуется.
 
-Context перенесён под вкладки. Под последним раскрытым блоком страницы добавлена ручка высоты: тяни её вверх/вниз или используй стрелки на клавиатуре. Она меняет последний блок отдельно от соседнего; при нехватке места страница прокручивается. Высоты сохраняются после перезагрузки. Двойной щелчок по нижней ручке возвращает автоматические пропорции всех блоков этой страницы. Размер всей оболочки по-прежнему меняется за нижние углы.
+Context перенесён под вкладки. Под последним раскрытым блоком страницы добавлена ручка высоты: тяни её вверх/вниз или используй стрелки на клавиатуре. Она меняет последний блок и общую рамку, сохраняя высоту соседнего; при нехватке места на экране страница прокручивается. Высоты сохраняются после перезагрузки. Двойной щелчок по нижней ручке возвращает автоматические пропорции всех блоков этой страницы. За нижние углы можно менять и ширину, и высоту всей оболочки.
 
 ## Обновление с beta.1
 
-1. Обнови Roleplay Tools обычной кнопкой обновления в Tavern, оставаясь на ветке `roleplay-tools-integration`. Версия оболочки должна стать `0.1.0-beta.3`.
+1. Обнови Roleplay Tools обычной кнопкой обновления в Tavern, оставаясь на ветке `roleplay-tools-integration`. Версия оболочки должна стать `0.1.0-beta.4`.
 2. У Character Visual, Story Notes и Story Goals выбери **Switch branch / Сменить ветку → origin/roleplay-tools-integration**. Уже установленным Thoughts, Relations и Context менять ветки не требуется.
 3. Полностью обнови страницу Tavern.
 
@@ -34,7 +38,7 @@ roleplay-tools-integration
 
 | Расширение | Репозиторий | Версия в тестовой ветке |
 | --- | --- | --- |
-| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.3 |
+| Roleplay Tools | [sillytavern-roleplay-tools](https://github.com/Wanichka/sillytavern-roleplay-tools/tree/roleplay-tools-integration) | 0.1.0-beta.4 |
 | Character Thoughts | [sillytavern-character-thoughts](https://github.com/Wanichka/sillytavern-character-thoughts/tree/roleplay-tools-integration) | 1.2.1-beta.1 |
 | Relationship Memory Tracker | [sillytavern-relationship-memory-tracker](https://github.com/Wanichka/sillytavern-relationship-memory-tracker/tree/roleplay-tools-integration) | 2.4.1-beta.1 |
 | Context Tracker | [sillytavern-context-tracker](https://github.com/Wanichka/sillytavern-context-tracker/tree/roleplay-tools-integration) | 1.0.1-beta.1 |
