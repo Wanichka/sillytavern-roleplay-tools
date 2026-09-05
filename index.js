@@ -6,8 +6,86 @@ const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const number = (value, fallback) => Number.isFinite(value) ? value : fallback;
 const validId = id => typeof id === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(id)
     && !['__proto__', 'prototype', 'constructor'].includes(id);
+const LANGS = ['en', 'ru'];
+const I18N = {
+    en: {
+        page: 'Page',
+        pages: 'Pages',
+        settings_title: 'Pages and layout',
+        hide_panel: 'Hide panel',
+        save_failed: 'Roleplay Tools could not save its layout in this browser.',
+        resize_left: 'Window size (left corner). Double-click to reset',
+        resize_right: 'Window size (right corner). Double-click to reset',
+        grip_bottom: 'Block and window height. Double-click for automatic height',
+        grip_divider: 'Change block heights. Up/down arrows change by 5%',
+        block_expand: 'Expand to full page',
+        block_restore: 'Show all blocks',
+        block_collapse: 'Collapse block',
+        block_uncollapse: 'Uncollapse block',
+        empty_docked: 'No blocks are placed on this page yet.',
+        empty_standalone: 'Separate windows mode is on.',
+        empty_action: 'Open layout settings',
+        done: 'Done',
+        toggle_dock: 'Dock extensions into one panel',
+        toggle_pin: 'Context is visible on every page',
+        language: 'Language',
+        position: 'Window position',
+        side_left: 'Left',
+        side_right: 'Right',
+        side_free: 'Free',
+        reset_size: 'Default window size',
+        add_page: 'Add page',
+        page_name: 'Page name',
+        page_move: 'Move page left',
+        page_remove: 'Delete page, move its blocks to a neighbour',
+        blocks: 'Connected blocks',
+        no_modules: 'Install the versions of Wani\'s extensions that support Roleplay Tools.',
+        move_up: 'Up',
+        move_down: 'Down',
+        hint_footer: 'One block takes one slot. Moving and deleting pages only changes placement; extension content is kept.',
+    },
+    ru: {
+        page: 'Страница',
+        pages: 'Страницы',
+        settings_title: 'Страницы и размещение',
+        hide_panel: 'Свернуть панель',
+        save_failed: 'Не удалось сохранить расположение Roleplay Tools в браузере.',
+        resize_left: 'Размер окна (левый угол). Двойной щелчок — сброс',
+        resize_right: 'Размер окна (правый угол). Двойной щелчок — сброс',
+        grip_bottom: 'Высота блока и окна. Двойной щелчок — автоматическая высота',
+        grip_divider: 'Изменить высоту блоков. Стрелки вверх/вниз — на 5%',
+        block_expand: 'Развернуть блок',
+        block_restore: 'Вернуть все блоки',
+        block_collapse: 'Свернуть блок',
+        block_uncollapse: 'Раскрыть блок',
+        empty_docked: 'На этой странице пока нет подключённых блоков.',
+        empty_standalone: 'Включён режим отдельных окон.',
+        empty_action: 'Настроить размещение',
+        done: 'Готово',
+        toggle_dock: 'Собирать расширения в общую панель',
+        toggle_pin: 'Context виден на всех страницах',
+        language: 'Язык',
+        position: 'Положение окна',
+        side_left: 'Слева',
+        side_right: 'Справа',
+        side_free: 'Свободное',
+        reset_size: 'Стандартный размер окна',
+        add_page: 'Добавить страницу',
+        page_name: 'Название страницы',
+        page_move: 'Передвинуть страницу влево',
+        page_remove: 'Удалить страницу, перенести блоки на соседнюю',
+        blocks: 'Подключённые блоки',
+        no_modules: 'Установи версии расширений Wani с поддержкой Roleplay Tools.',
+        move_up: 'Выше',
+        move_down: 'Ниже',
+        hint_footer: 'Один блок занимает одно место. Перенос и удаление страниц меняют только расположение; содержимое расширений сохраняется.',
+    },
+};
+// Mirrors layout.lang so t() also works while the layout is still being read.
+let language = 'en';
+const t = key => I18N[language]?.[key] ?? I18N.en[key] ?? key;
 const defaults = () => ({
-    version: 1, enabled: true, open: true, side: 'right',
+    version: 1, enabled: true, open: true, side: 'right', lang: 'en',
     geometry: { width: 390, height: 680, x: 18, y: 70 },
     active: 'live', pinContext: true,
     pages: [{ id: 'live', name: 'Live' }],
@@ -19,16 +97,19 @@ const defaults = () => ({
 });
 
 function readLayout() {
+    language = 'en';
     const initial = defaults();
     try {
         const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
         if (!data || data.version !== 1) return initial;
+        language = LANGS.includes(data.lang) ? data.lang : 'en';
+        initial.lang = language;
         const ids = new Set();
         const pages = (Array.isArray(data.pages) ? data.pages : []).filter(page => {
             if (!page || !validId(page.id) || ids.has(page.id)) return false;
             ids.add(page.id);
             return true;
-        }).map(page => ({ id: page.id, name: String(page.name || 'Страница').slice(0, 40) }));
+        }).map(page => ({ id: page.id, name: String(page.name || t('page')).slice(0, 40) }));
         if (!pages.length) return initial;
         initial.pages = pages;
         initial.active = ids.has(data.active) ? data.active : pages[0].id;
@@ -76,11 +157,14 @@ function start() {
         if (text !== undefined) element.textContent = text;
         return element;
     };
+    const setLabel = (element, label) => {
+        element.title = label;
+        element.setAttribute('aria-label', label);
+    };
     const button = (label, icon, action, className = 'rpt-icon') => {
         const element = make('button', className);
         element.type = 'button';
-        element.title = label;
-        element.setAttribute('aria-label', label);
+        setLabel(element, label);
         if (icon) {
             const glyph = make('i', `fa-solid fa-${icon}`);
             glyph.setAttribute('aria-hidden', 'true');
@@ -100,7 +184,7 @@ function start() {
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)); }
         catch (error) {
             console.warn('[Roleplay Tools] Cannot save layout:', error);
-            if (!saveWarning) window.toastr?.warning('Не удалось сохранить расположение Roleplay Tools в браузере.');
+            if (!saveWarning) window.toastr?.warning(t('save_failed'));
             saveWarning = true;
         }
     }
@@ -117,21 +201,21 @@ function start() {
     const header = make('header', 'rpt-header');
     const brand = make('span', 'rpt-brand', '✦ Roleplay Tools');
     const headerActions = make('div', 'rpt-header-actions');
-    const settingsButton = button('Страницы и размещение', 'sliders', () => setSettings(!settingsOpen));
-    const closeButton = button('Свернуть панель', 'xmark', () => { layout.open = false; save(); updateVisibility(); });
+    const settingsButton = button(t('settings_title'), 'sliders', () => setSettings(!settingsOpen));
+    const closeButton = button(t('hide_panel'), 'xmark', () => { layout.open = false; save(); updateVisibility(); });
     headerActions.append(settingsButton, closeButton);
     header.append(brand, headerActions);
     const tabs = make('nav', 'rpt-tabs');
     tabs.setAttribute('role', 'tablist');
-    tabs.setAttribute('aria-label', 'Страницы');
+    tabs.setAttribute('aria-label', t('pages'));
     const workspace = make('div', 'rpt-workspace');
     const footer = make('section', 'rpt-footer');
     footer.setAttribute('aria-label', 'Context');
     const settingsPanel = make('section', 'rpt-settings');
     settingsPanel.hidden = true;
-    settingsPanel.setAttribute('aria-label', 'Страницы и размещение');
-    const resizeLeft = button('Размер окна (левый угол). Двойной щелчок — сброс', 'grip-lines', null, 'rpt-resize rpt-resize-left');
-    const resizeRight = button('Размер окна (правый угол). Двойной щелчок — сброс', 'grip-lines', null, 'rpt-resize rpt-resize-right');
+    settingsPanel.setAttribute('aria-label', t('settings_title'));
+    const resizeLeft = button(t('resize_left'), 'grip-lines', null, 'rpt-resize rpt-resize-left');
+    const resizeRight = button(t('resize_right'), 'grip-lines', null, 'rpt-resize rpt-resize-right');
     shell.append(header, tabs, footer, workspace, settingsPanel, resizeLeft, resizeRight);
     const launcher = button('Roleplay Tools', 'layer-group', () => {
         layout.open = true;
@@ -149,7 +233,7 @@ function start() {
             if (suggested && validId(suggested.id)) {
                 page = suggested.id;
                 if (!layout.pages.some(item => item.id === page)) {
-                    layout.pages.push({ id: page, name: String(suggested.name || 'Страница').slice(0, 40) });
+                    layout.pages.push({ id: page, name: String(suggested.name || t('page')).slice(0, 40) });
                 }
             }
             layout.modules[id] = { page, order: modules.size, weight: 50, collapsed: false };
@@ -204,12 +288,12 @@ function start() {
         record.tile.dataset.module = record.id;
         record.tile.setAttribute('aria-label', descriptor.title || record.id);
         record.controls = make('span', 'rpt-module-controls');
-        record.maxButton = button('Развернуть блок', 'expand', () => {
+        record.maxButton = button(t('block_expand'), 'expand', () => {
             expanded = expanded === record.id ? null : record.id;
             state(record.id).collapsed = false;
             renderPages(); save();
         });
-        record.collapseButton = button('Свернуть блок', 'minus', () => {
+        record.collapseButton = button(t('block_collapse'), 'minus', () => {
             state(record.id).collapsed = !state(record.id).collapsed;
             expanded = null;
             renderPages(); save();
@@ -281,10 +365,10 @@ function start() {
                 record.tile.classList.remove('rpt-pinned');
                 record.controls.hidden = false;
                 record.collapseButton.setAttribute('aria-expanded', String(!entry.collapsed));
-                record.collapseButton.title = entry.collapsed ? 'Раскрыть блок' : 'Свернуть блок';
+                record.collapseButton.title = t(entry.collapsed ? 'block_uncollapse' : 'block_collapse');
                 record.collapseButton.setAttribute('aria-label', record.collapseButton.title);
                 record.collapseButton.firstElementChild.className = `fa-solid fa-${entry.collapsed ? 'plus' : 'minus'}`;
-                record.maxButton.title = expanded === record.id ? 'Вернуть все блоки' : 'Развернуть блок';
+                record.maxButton.title = t(expanded === record.id ? 'block_restore' : 'block_expand');
                 record.maxButton.setAttribute('aria-label', record.maxButton.title);
                 record.maxButton.firstElementChild.className = `fa-solid fa-${expanded === record.id ? 'compress' : 'expand'}`;
                 if (visible) {
@@ -305,8 +389,8 @@ function start() {
             body.style.gridTemplateRows = rows.join(' ');
             if (!entries.length) {
                 const empty = make('div', 'rpt-empty');
-                empty.append(make('p', '', layout.enabled ? 'На этой странице пока нет подключённых блоков.' : 'Включён режим отдельных окон.'));
-                empty.append(button('Настроить размещение', null, () => setSettings(true), 'rpt-action'));
+                empty.append(make('p', '', t(layout.enabled ? 'empty_docked' : 'empty_standalone')));
+                empty.append(button(t('empty_action'), null, () => setSettings(true), 'rpt-action'));
                 body.append(empty);
             }
         }
@@ -363,7 +447,7 @@ function start() {
     }
     function makeBottomGrip(record) {
         const divider = make('div', 'rpt-divider rpt-bottom-divider');
-        const grip = button('Высота блока и окна. Двойной щелчок — автоматическая высота', 'grip-lines', null, 'rpt-bottom-grip');
+        const grip = button(t('grip_bottom'), 'grip-lines', null, 'rpt-bottom-grip');
         divider.append(grip);
         let dragging = null;
         const resize = height => {
@@ -423,7 +507,7 @@ function start() {
         const divider = make('div', 'rpt-divider');
         const disabled = state(upper.id).collapsed || state(lower.id).collapsed;
         if (disabled) { divider.classList.add('rpt-divider-disabled'); return divider; }
-        const grip = button('Изменить высоту блоков. Стрелки вверх/вниз — на 5%', 'grip-lines', null, 'rpt-divider-grip');
+        const grip = button(t('grip_divider'), 'grip-lines', null, 'rpt-divider-grip');
         divider.append(grip);
         const setRatio = ratio => {
             const total = state(upper.id).weight + state(lower.id).weight;
@@ -472,6 +556,16 @@ function start() {
         return divider;
     }
 
+    // Header, launcher and corner grips are built once, so a language switch
+    // has to relabel them by hand; everything else is rebuilt on render.
+    function refreshChrome() {
+        setLabel(settingsButton, t('settings_title'));
+        setLabel(closeButton, t('hide_panel'));
+        setLabel(resizeLeft, t('resize_left'));
+        setLabel(resizeRight, t('resize_right'));
+        tabs.setAttribute('aria-label', t('pages'));
+        settingsPanel.setAttribute('aria-label', t('settings_title'));
+    }
     function setSettings(open) {
         settingsOpen = open;
         settingsButton.setAttribute('aria-expanded', String(open));
@@ -481,7 +575,7 @@ function start() {
     function renderSettings() {
         settingsPanel.replaceChildren();
         const top = make('div', 'rpt-settings-heading');
-        top.append(make('span', 'rpt-brand', 'Страницы и размещение'), button('Готово', null, () => setSettings(false), 'rpt-action'));
+        top.append(make('span', 'rpt-brand', t('settings_title')), button(t('done'), null, () => setSettings(false), 'rpt-action'));
         settingsPanel.append(top);
         const toggle = (text, checked, change) => {
             const label = make('label', 'rpt-check');
@@ -489,27 +583,39 @@ function start() {
             input.addEventListener('change', () => change(input.checked));
             label.append(input, make('span', '', text)); settingsPanel.append(label);
         };
-        toggle('Собирать расширения в общую панель', layout.enabled, enabled => {
+        toggle(t('toggle_dock'), layout.enabled, enabled => {
             layout.enabled = enabled; expanded = null;
             for (const record of modules.values()) enabled ? mount(record) : release(record);
             renderPages(); save();
         });
-        toggle('Context виден на всех страницах', layout.pinContext, value => {
+        toggle(t('toggle_pin'), layout.pinContext, value => {
             layout.pinContext = value; expanded = null; renderPages(); renderSettings(); save();
         });
-        const positionLabel = make('label', 'rpt-field', 'Положение окна');
+        const langLabel = make('label', 'rpt-field', t('language'));
+        const langSelect = make('select');
+        for (const [value, name] of [['en', 'English'], ['ru', 'Русский']]) {
+            const option = make('option', '', name); option.value = value; langSelect.append(option);
+        }
+        langSelect.value = language;
+        langSelect.addEventListener('change', () => {
+            language = LANGS.includes(langSelect.value) ? langSelect.value : 'en';
+            layout.lang = language;
+            save(); refreshChrome(); renderPages(); renderSettings();
+        });
+        langLabel.append(wrapSelect(langSelect)); settingsPanel.append(langLabel);
+        const positionLabel = make('label', 'rpt-field', t('position'));
         const position = make('select');
-        for (const [value, name] of [['left', 'Слева'], ['right', 'Справа'], ['free', 'Свободное']]) {
+        for (const [value, name] of [['left', t('side_left')], ['right', t('side_right')], ['free', t('side_free')]]) {
             const option = make('option', '', name); option.value = value; position.append(option);
         }
         position.value = layout.side;
         position.addEventListener('change', () => { layout.side = position.value; fitWindow(); save(); });
         positionLabel.append(wrapSelect(position)); settingsPanel.append(positionLabel);
-        settingsPanel.append(button('Стандартный размер окна', null, resetSize, 'rpt-action'));
+        settingsPanel.append(button(t('reset_size'), null, resetSize, 'rpt-action'));
         const pagesTitle = make('div', 'rpt-settings-heading');
-        pagesTitle.append(make('span', 'rpt-label', 'Страницы'), button('Добавить страницу', 'plus', () => {
+        pagesTitle.append(make('span', 'rpt-label', t('pages')), button(t('add_page'), 'plus', () => {
             const id = `page-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
-            layout.pages.push({ id, name: `Страница ${layout.pages.length + 1}` });
+            layout.pages.push({ id, name: `${t('page')} ${layout.pages.length + 1}` });
             renderPages(); renderSettings(); save();
             settingsPanel.querySelector(`[data-page-name="${id}"]`)?.focus();
         }));
@@ -518,15 +624,15 @@ function start() {
             const row = make('div', 'rpt-page-editor');
             const name = make('input'); name.type = 'text'; name.maxLength = 40; name.value = page.name;
             name.dataset.pageName = page.id;
-            name.setAttribute('aria-label', 'Название страницы');
-            name.addEventListener('change', () => { page.name = name.value.trim() || 'Страница'; renderPages(); renderSettings(); save(); });
+            name.setAttribute('aria-label', t('page_name'));
+            name.addEventListener('change', () => { page.name = name.value.trim() || t('page'); renderPages(); renderSettings(); save(); });
             const index = layout.pages.indexOf(page);
-            const move = button('Передвинуть страницу влево', 'arrow-left', () => {
+            const move = button(t('page_move'), 'arrow-left', () => {
                 [layout.pages[index - 1], layout.pages[index]] = [layout.pages[index], layout.pages[index - 1]];
                 renderPages(); renderSettings(); save();
             });
             move.disabled = index === 0;
-            const remove = button('Удалить страницу, перенести блоки на соседнюю', 'trash', () => {
+            const remove = button(t('page_remove'), 'trash', () => {
                 const next = layout.pages.find(item => item.id !== page.id);
                 for (const entry of Object.values(layout.modules)) if (entry.page === page.id) entry.page = next.id;
                 layout.pages = layout.pages.filter(item => item.id !== page.id);
@@ -536,8 +642,8 @@ function start() {
             remove.disabled = layout.pages.length === 1;
             row.append(name, move, remove); settingsPanel.append(row);
         }
-        settingsPanel.append(make('div', 'rpt-label', 'Подключённые блоки'));
-        if (!modules.size) settingsPanel.append(make('p', 'rpt-hint', 'Установи версии расширений Wani с поддержкой Roleplay Tools.'));
+        settingsPanel.append(make('div', 'rpt-label', t('blocks')));
+        if (!modules.size) settingsPanel.append(make('p', 'rpt-hint', t('no_modules')));
         for (const record of modules.values()) {
             const box = make('div', 'rpt-module-editor');
             box.append(make('div', 'rpt-module-title', record.descriptor.title || record.id));
@@ -548,14 +654,14 @@ function start() {
             }
             select.value = state(record.id).page;
             select.disabled = isPinned(record);
-            select.setAttribute('aria-label', `Страница: ${record.descriptor.title}`);
+            select.setAttribute('aria-label', `${t('page')}: ${record.descriptor.title}`);
             select.addEventListener('change', () => { state(record.id).page = select.value; expanded = null; renderPages(); renderSettings(); save(); });
             row.append(wrapSelect(select));
             const peers = [...modules.values()].filter(item => !isPinned(item) && state(item.id).page === state(record.id).page)
                 .sort((a, b) => state(a.id).order - state(b.id).order);
             const index = peers.indexOf(record);
             const arrows = make('div', 'rpt-module-controls');
-            for (const [delta, icon, title] of [[-1, 'arrow-up', 'Выше'], [1, 'arrow-down', 'Ниже']]) {
+            for (const [delta, icon, title] of [[-1, 'arrow-up', t('move_up')], [1, 'arrow-down', t('move_down')]]) {
                 const move = button(title, icon, () => {
                     [peers[index], peers[index + delta]] = [peers[index + delta], peers[index]];
                     peers.forEach((item, order) => { state(item.id).order = order; });
@@ -566,7 +672,7 @@ function start() {
             }
             row.append(arrows); box.append(row); settingsPanel.append(box);
         }
-        settingsPanel.append(make('p', 'rpt-hint', 'Один блок занимает одно место. Перенос и удаление страниц меняют только расположение; содержимое расширений сохраняется.'));
+        settingsPanel.append(make('p', 'rpt-hint', t('hint_footer')));
     }
 
     function viewport() {
