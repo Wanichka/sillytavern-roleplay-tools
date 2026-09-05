@@ -185,15 +185,7 @@
 }
 #rpt-shell .rpt-select-wrap:has(select:disabled)::after { opacity: .4; }
 #rpt-shell .rpt-module-title { font-size: 12px; margin-bottom: 7px; overflow-wrap: anywhere; }
-#rpt-shell .rpt-field-inline { flex-direction: row; align-items: center; gap: 8px; margin: 0; }
-#rpt-shell .rpt-field-caption {
-    flex: 0 0 auto;
-    font-size: 11px;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--rpt-muted);
-}
-#rpt-shell .rpt-field-inline .rpt-select-wrap { flex: 1 1 auto; }
+#rpt-shell .rpt-editor-row .rpt-select-wrap { flex: 1 1 auto; }
 #rpt-shell .rpt-module-editor { border-top: 1px solid var(--rpt-soft); padding: 10px 0 0; }
 #rpt-shell .rpt-editor-row { display: flex; align-items: center; gap: 8px; }
 #rpt-shell .rpt-hint, #rpt-shell .rpt-empty { color: var(--rpt-muted); font-size: 12px; line-height: 1.5; }
