@@ -109,7 +109,8 @@ function readLayout() {
             if (!page || !validId(page.id) || ids.has(page.id)) return false;
             ids.add(page.id);
             return true;
-        }).map(page => ({ id: page.id, name: String(page.name || t('page')).slice(0, 40) }));
+        }).map(page => ({ id: page.id, name: String(page.name || t('page')).slice(0, 40),
+            expanded: validId(page.expanded) ? page.expanded : null }));
         if (!pages.length) return initial;
         initial.pages = pages;
         initial.active = ids.has(data.active) ? data.active : pages[0].id;
@@ -144,7 +145,16 @@ function readLayout() {
 function start() {
     if (window.WaniRoleplayTools || document.getElementById('rpt-shell')) return;
     let layout = readLayout();
-    let expanded = null;
+    function getExpanded(pageId = layout.active) {
+        const id = layout.pages.find(page => page.id === pageId)?.expanded;
+        const record = modules.get(id);
+        return record?.mounted && !isPinned(record) && state(id).page === pageId
+            && !state(id).collapsed ? id : null;
+    }
+    function setExpanded(id) {
+        const page = layout.pages.find(page => page.id === layout.active);
+        if (page) page.expanded = id;
+    }
     let settingsOpen = false;
     let destroyed = false;
     let saveWarning = false;
@@ -289,13 +299,13 @@ function start() {
         record.tile.setAttribute('aria-label', descriptor.title || record.id);
         record.controls = make('span', 'rpt-module-controls');
         record.maxButton = button(t('block_expand'), 'expand', () => {
-            expanded = expanded === record.id ? null : record.id;
+            setExpanded(getExpanded() === record.id ? null : record.id);
             state(record.id).collapsed = false;
             renderPages(); save();
         });
         record.collapseButton = button(t('block_collapse'), 'minus', () => {
             state(record.id).collapsed = !state(record.id).collapsed;
-            expanded = null;
+            setExpanded(null);
             renderPages(); save();
         });
         record.controls.append(record.maxButton, record.collapseButton);
@@ -310,7 +320,7 @@ function start() {
 
     function activate(id) {
         if (!layout.pages.some(page => page.id === id)) return;
-        layout.active = id; expanded = null;
+        layout.active = id;
         setSettings(false); renderPages(); save();
     }
     function openModule(id) {
@@ -319,6 +329,10 @@ function start() {
         layout.open = true;
         state(id).collapsed = false;
         activate(state(id).page);
+        if (getExpanded() && getExpanded() !== id) {
+            setExpanded(id);
+            renderPages(); save();
+        }
         fitWindow(); updateVisibility();
         return true;
     }
@@ -353,7 +367,12 @@ function start() {
             workspace.append(body);
             const entries = [...modules.values()].filter(record => record.mounted && !isPinned(record)
                 && state(record.id).page === page.id).sort((a, b) => state(a.id).order - state(b.id).order);
-            const visibleEntries = expanded && page.id === layout.active ? entries.filter(record => record.id === expanded) : entries;
+            const expanded = getExpanded(page.id);
+            const visibleEntries = expanded ? entries.filter(record => record.id === expanded) : entries;
+            // A sole panel owns the available viewport. Saved pixel heights
+            // must not create a second scroll container around its own scroller.
+            const fitSingle = visibleEntries.length === 1 && !state(visibleEntries[0].id).collapsed;
+            body.classList.toggle('rpt-page-single', fitSingle);
             body.style.alignContent = visibleEntries.length && visibleEntries.every(record => state(record.id).collapsed) ? 'start' : 'stretch';
             const rows = [];
             let previous = null;
@@ -376,16 +395,16 @@ function start() {
                         body.append(makeDivider(previous, record));
                         rows.push('12px');
                     }
-                    rows.push(rowHeight(record));
+                    rows.push(fitSingle ? 'minmax(0, 1fr)' : rowHeight(record));
                     previous = record;
                 }
                 body.append(record.tile);
             }
-            if (previous && !state(previous.id).collapsed && !expanded) {
+            if (previous && !state(previous.id).collapsed && !expanded && !fitSingle) {
                 body.append(makeBottomGrip(previous));
                 rows.push('12px');
             }
-            if (!expanded && visibleEntries.some(record => Number.isFinite(state(record.id).height))) rows.push('minmax(0, 1fr)');
+            if (!expanded && !fitSingle && visibleEntries.some(record => Number.isFinite(state(record.id).height))) rows.push('minmax(0, 1fr)');
             body.style.gridTemplateRows = rows.join(' ');
             if (!entries.length) {
                 const empty = make('div', 'rpt-empty');
@@ -417,7 +436,7 @@ function start() {
         for (const record of modules.values()) {
             const visible = record.mounted && layout.open && !settingsOpen
                 && (isPinned(record) || (state(record.id).page === layout.active
-                    && !state(record.id).collapsed && (!expanded || expanded === record.id)));
+                    && !state(record.id).collapsed && (!getExpanded() || getExpanded() === record.id)));
             if (visible && !record.visible) call(record, 'onShow');
             record.visible = visible;
         }
@@ -425,12 +444,14 @@ function start() {
 
     function rowHeight(record) {
         const entry = state(record.id);
+        const expanded = getExpanded(entry.page);
         if (entry.collapsed) return 'auto';
         const minimum = record.descriptor.minHeight || 155;
         if (!expanded && Number.isFinite(entry.height)) return `${Math.max(minimum, entry.height)}px`;
         return `minmax(${minimum}px, ${entry.weight}fr)`;
     }
     function updateRows(page) {
+        const expanded = getExpanded();
         const rows = [...page.children].filter(node => !node.hidden).map(node => {
             if (node.classList.contains('rpt-divider')) return '12px';
             const record = modules.get(node.dataset.module);
@@ -584,12 +605,12 @@ function start() {
             label.append(input, make('span', '', text)); settingsPanel.append(label);
         };
         toggle(t('toggle_dock'), layout.enabled, enabled => {
-            layout.enabled = enabled; expanded = null;
+            layout.enabled = enabled; setExpanded(null);
             for (const record of modules.values()) enabled ? mount(record) : release(record);
             renderPages(); save();
         });
         toggle(t('toggle_pin'), layout.pinContext, value => {
-            layout.pinContext = value; expanded = null; renderPages(); renderSettings(); save();
+            layout.pinContext = value; setExpanded(null); renderPages(); renderSettings(); save();
         });
         const langLabel = make('label', 'rpt-field', t('language'));
         const langSelect = make('select');
@@ -637,7 +658,7 @@ function start() {
                 for (const entry of Object.values(layout.modules)) if (entry.page === page.id) entry.page = next.id;
                 layout.pages = layout.pages.filter(item => item.id !== page.id);
                 if (layout.active === page.id) layout.active = next.id;
-                expanded = null; renderPages(); renderSettings(); save();
+                setExpanded(null); renderPages(); renderSettings(); save();
             });
             remove.disabled = layout.pages.length === 1;
             row.append(name, move, remove); settingsPanel.append(row);
@@ -655,7 +676,7 @@ function start() {
             select.value = state(record.id).page;
             select.disabled = isPinned(record);
             select.setAttribute('aria-label', `${t('page')}: ${record.descriptor.title}`);
-            select.addEventListener('change', () => { state(record.id).page = select.value; expanded = null; renderPages(); renderSettings(); save(); });
+            select.addEventListener('change', () => { state(record.id).page = select.value; setExpanded(null); renderPages(); renderSettings(); save(); });
             row.append(wrapSelect(select));
             const peers = [...modules.values()].filter(item => !isPinned(item) && state(item.id).page === state(record.id).page)
                 .sort((a, b) => state(a.id).order - state(b.id).order);
@@ -760,7 +781,7 @@ function start() {
         unregister(id) {
             const record = modules.get(id);
             if (!record) return;
-            release(record); modules.delete(id); expanded = null; renderPages();
+            release(record); modules.delete(id); setExpanded(null); renderPages();
         },
         destroy() {
             destroyed = true; events.abort();
@@ -776,3 +797,4 @@ function start() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
 else start();
+
