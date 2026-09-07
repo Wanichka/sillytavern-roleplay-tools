@@ -37,6 +37,36 @@
 }
 #rpt-shell *, #rpt-shell *::before, #rpt-shell *::after { box-sizing: border-box; }
 #rpt-shell[hidden], #rpt-launcher[hidden], #rpt-shell [hidden] { display: none !important; }
+
+/* ---------- полосы прокрутки ----------
+   Дефолтная браузерная полоска выбивалась из панели: светлый бегунок и
+   серый жёлоб. Настройка одна на всю оболочку.
+   Firefox читает scrollbar-*, они наследуются — хватает объявления на корне.
+   Chrome читает ::-webkit-scrollbar, там наследования нет, поэтому звёздочка.
+   Прозрачная рамка с background-clip даёт бегунку воздух по краям. */
+#rpt-shell {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rpt-border) transparent;
+}
+#rpt-shell *::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+#rpt-shell *::-webkit-scrollbar-track,
+#rpt-shell *::-webkit-scrollbar-corner {
+    background: transparent;
+}
+#rpt-shell *::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--rpt-accent) 40%, transparent);
+    background-clip: padding-box;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+#rpt-shell *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--rpt-accent) 70%, transparent);
+    background-clip: padding-box;
+}
+
 #rpt-shell .rpt-header {
     display: flex;
     align-items: center;
@@ -98,7 +128,6 @@
     overflow-x: auto;
     flex: 0 0 auto;
     border-bottom: 1px solid var(--rpt-soft);
-    scrollbar-width: thin;
 }
 #rpt-shell .rpt-tab { background: transparent; border-color: transparent; color: var(--rpt-muted); flex: 1 0 auto; max-width: 230px; }
 #rpt-shell .rpt-tab[aria-selected='true'] {
@@ -113,8 +142,6 @@
     padding: 8px 9px;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: var(--rpt-border) transparent;
     align-content: stretch;
 }
 #rpt-shell .rpt-tile { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--rpt-soft); border-radius: 11px; }
@@ -211,4 +238,6 @@
     #rpt-shell .rpt-tab, #rpt-shell .rpt-action { min-height: 42px; }
     #rpt-shell .rpt-resize { height: 24px; width: 44px; }
     #rpt-shell .rpt-settings input, #rpt-shell .rpt-settings select { font-size: 16px; }
+    /* На касании полоску делаем чуть толще, иначе её не подцепить пальцем. */
+    #rpt-shell *::-webkit-scrollbar { width: 10px; height: 10px; }
 }
