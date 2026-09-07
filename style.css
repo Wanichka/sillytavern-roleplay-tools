@@ -144,6 +144,7 @@
     overflow-x: hidden;
     align-content: stretch;
 }
+#rpt-shell .rpt-page.rpt-page-single { overflow: hidden; }
 #rpt-shell .rpt-tile { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--rpt-soft); border-radius: 11px; }
 #rpt-shell .rpt-footer { flex: 0 0 auto; border-bottom: 1px solid var(--rpt-border); padding: 4px 9px 7px; }
 #rpt-shell .rpt-pinned { border: 0; border-radius: 0; }
@@ -241,3 +242,4 @@
     /* На касании полоску делаем чуть толще, иначе её не подцепить пальцем. */
     #rpt-shell *::-webkit-scrollbar { width: 10px; height: 10px; }
 }
+
